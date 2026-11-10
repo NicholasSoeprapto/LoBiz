@@ -15,8 +15,10 @@ Proyek ini mendukung **SDG 9: Industri, Inovasi, dan Infrastruktur**.
 - Label otomatis pada kartu: 🔥 Hot, 📈 Trending, 🏆 Terlaris, 🆕 Baru.
 - Halaman detail UMKM: banner, logo, slogan, cerita usaha, galeri foto (bisa diperbesar), daftar produk, dan tombol WhatsApp.
 - Rating bintang dan ulasan untuk setiap UMKM.
+- **Panduan (user guide)**: tombol "❓ Panduan" di navbar membuka tur interaktif bergaya spotlight yang menyorot bagian penting halaman langkah demi langkah. Ada tiga jalur: Pengunjung & Pelanggan, Pemilik UMKM, dan Admin (dua terakhir butuh login). Navigasi dengan tombol, panah kiri/kanan, atau Esc untuk menutup.
 - **Chat bantuan Loby**: tombol chat di pojok kanan bawah dengan asisten otomatis bernama Loby (bot berbasis aturan, tanpa server). Menjawab pertanyaan umum seputar pendaftaran, foto toko, ulasan, filter, dan akun demo, lengkap dengan tombol saran jawaban, animasi mengetik, dan riwayat chat tersimpan di browser.
 - **Akun pelanggan**: pengunjung bisa menjelajah situs dan mengobrol dengan Loby tanpa akun, tetapi chat dengan UMKM dan menulis ulasan memerlukan akun pelanggan (daftar lewat "Daftar Pelanggan"). Satu pelanggan hanya punya satu ulasan per UMKM, dan bisa memperbaruinya.
+- **Checkout (simulasi)**: pelanggan yang login bisa menekan "🛒 Beli" pada produk, mengisi alamat, kode pos, dan memilih pembayaran (kartu, GoPay, OVO, DANA, ShopeePay, QRIS, transfer bank). Form divalidasi, tetapi setelah semua terisi sengaja tidak terjadi apa-apa: tidak ada pembayaran, pesanan, atau data yang disimpan.
 - **Pesan**: pelanggan (yang sudah login) bisa chat dengan UMKM pilihannya lewat tombol "Chat dengan UMKM" di halaman detail. Pemilik UMKM dan admin punya kotak masuk lewat tombol "💬 Pesan" di navbar (dengan penanda belum dibaca). Admin bisa memulai chat dengan UMKM mana pun. Pesan disimpan di localStorage dan tersinkron antar tab di browser yang sama.
 - Teks berjalan (kanan ke kiri) berisi UMKM terbaru, pembeli terbaru, dan ulasan baru. Datanya buatan (demo).
 
@@ -85,7 +87,7 @@ Data awal (UMKM, produk, transaksi, dan ulasan) dibuat otomatis saat halaman per
 - Menghubungkan Loby ke model AI atau layanan live chat sungguhan (saat ini jawabannya berbasis aturan).
 - Backend dan database sungguhan (autentikasi, penyimpanan gambar di cloud).
 - Foto stock asli atau unggahan ke penyimpanan objek.
-- Pembeli bisa membeli atau memesan langsung dari halaman UMKM.
+- Pembayaran dan pesanan sungguhan (saat ini checkout hanya simulasi).
 - Moderasi ulasan dan notifikasi ke pemilik.
 
 ## Lisensi

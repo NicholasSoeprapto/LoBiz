@@ -450,8 +450,9 @@ function renderDetail(id){
   var avg=avgRating(u.id), count=ratingsFor(u.id).length;
   document.getElementById('detail-stars').textContent=starString(avg);
   document.getElementById('detail-rating-text').textContent=count?(avg.toFixed(1)+' dari '+count+' ulasan'):'Belum ada ulasan';
+  var cuB=currentUser(), canBuy=!cuB||cuB.role==='customer';
   document.getElementById('detail-produk').innerHTML=u.produk.map(function(p){
-    return '<div class="product-row"><div class="product-left"><img class="product-thumb" src="'+produkImg(u,p)+'" alt=""><div><div class="product-name">'+escapeHtml(p.nama)+'</div><div class="product-sold">'+produkTerjual(u,p.id)+' terjual</div></div></div><div class="product-price">'+formatRupiah(p.harga)+'</div></div>';
+    return '<div class="product-row"><div class="product-left"><img class="product-thumb" src="'+produkImg(u,p)+'" alt=""><div><div class="product-name">'+escapeHtml(p.nama)+'</div><div class="product-sold">'+produkTerjual(u,p.id)+' terjual</div></div></div><div class="product-right"><div class="product-price">'+formatRupiah(p.harga)+'</div>'+(canBuy?'<button type="button" class="btn btn-primary btn-sm buy-btn" data-buy="'+p.id+'">🛒 Beli</button>':'')+'</div></div>';
   }).join('')||'<p class="form-hint">Belum ada produk terdaftar.</p>';
   var reviews=ratingsFor(u.id).slice().sort(function(a,b){ return (b.official?1:0)-(a.official?1:0) || new Date(b.tanggal)-new Date(a.tanggal); });
   document.getElementById('detail-review-count').textContent=reviews.length;
@@ -1295,6 +1296,7 @@ document.addEventListener('DOMContentLoaded', init);
     {k:[/terima kasih|makasih|thanks|thank you|thx|mantap|oke makasih/],a:['Sama-sama! 😊 Kalau ada yang lain, tanya saja ya.','Senang bisa membantu! Semoga usahanya makin laris 🚀']},
     {k:[/siapa (kamu|anda)|(kamu|anda) siapa|nama (kamu|mu|anda)|kamu (itu )?apa|manusia|robot|bot\b|\bai\b/],a:['Saya Loby, asisten otomatis LoBiz. Saya bukan manusia: saya bot berbasis aturan yang menjawab pertanyaan umum soal website ini. 🤖','Namaku Loby! Bot asisten LoBiz. Jawabanku otomatis, jadi kalau pertanyaannya rumit, coba pakai kata kunci yang lebih sederhana ya.']},
     {k:[/apa itu|apa sih|tentang lobiz|lobiz itu|jelaskan lobiz|website ini|situs ini|fungsi/],a:['LoBiz (Lokal Bisnis Lo Bisa) adalah direktori dan etalase digital untuk UMKM lokal. Pemilik usaha bisa memasang halaman toko, produk, dan foto, sedangkan pengunjung bisa menemukan UMKM, melihat rating, dan memberi ulasan. 🏪'],q:['Cara daftar UMKM','Filter & urutan','Apakah gratis?']},
+    {k:[/panduan|tutorial|petunjuk|cara pakai|cara menggunakan|user guide|baru di sini|bingung|navigasi|tur\b/],a:['Klik tombol "❓ Panduan" di bagian atas halaman untuk tur interaktif. Layar akan menyorot bagian penting website langkah demi langkah. Ada panduan untuk pengunjung/pelanggan, pemilik UMKM, dan admin.'],q:['Apa itu LoBiz?','Cara buat akun pelanggan']},
     {k:[/chat (dengan|ke|sama)|chat umkm|kirim pesan|pesan (ke|untuk) (umkm|toko|penjual)|tanya (penjual|umkm|toko)|kotak masuk|inbox|bicara (dengan|sama) (umkm|penjual)/,/chat|pesan/],a:['Anda bisa chat langsung dengan UMKM lewat tombol "💬 Chat dengan UMKM" di halaman detail UMKM. Fitur ini butuh akun pelanggan (gratis). Setelah masuk, balasan muncul di tombol "💬 Pesan" di bagian atas. Pemilik UMKM dan admin juga memakai tombol itu untuk kotak masuk mereka.'],q:['Cara buat akun pelanggan','Cara beri ulasan']},
     {k:[/akun pelanggan|daftar pelanggan|buat akun (pelanggan|customer)|akun customer|daftar customer|daftar sebagai pelanggan/,/pelanggan|customer/],a:['Untuk membuat akun pelanggan: klik "Daftar Pelanggan" di bagian atas, isi nama, username, dan kata sandi (minimal 6 karakter). Akun ini gratis dan dibutuhkan untuk chat dengan UMKM serta menulis ulasan. Menjelajah situs dan mengobrol dengan saya tetap bisa tanpa akun. 😊'],q:['Cara chat dengan UMKM']},
     {k:[/daftar|registrasi|bergabung|buat akun|pendaftaran|sign ?up|gabung/],a:['Cara mendaftarkan UMKM: 1) klik tombol "Daftarkan UMKM" di beranda, 2) isi data akun dan data usaha, 3) kirim. Setelah itu pendaftaran Anda ditinjau admin dan, kalau disetujui, usaha Anda tampil di direktori. ✅'],q:['Berapa lama verifikasi?','Cara upload foto toko']},
@@ -1311,7 +1313,7 @@ document.addEventListener('DOMContentLoaded', init);
     {k:[/filter|urut|sort|cari|pencarian|search|kategori|kota|terlaris|trending|hot|terbaru|paling/],a:['Di direktori Anda bisa mencari nama, memfilter kategori dan kota, atau memilih urutan lewat tombol: 🔥 Hot, 📈 Trending, 🏆 Terlaris, 👥 Pembeli terbanyak, 🆕 Terbaru, ⭐ Rating tertinggi, dan 💬 Ulasan terbanyak. Ada juga filter rating minimal.'],q:['Apa arti Hot dan Trending?']},
     {k:[/arti (hot|trending)|hot (dan|vs|&) trending|beda.*(hot|trending)|label/],a:['Hot = UMKM dengan aktivitas pembeli tinggi belakangan ini (dipengaruhi rating). Trending = UMKM yang pembelinya naik dibanding beberapa hari sebelumnya. Terlaris dihitung dari total unit terjual. Semua angka di versi demo ini berasal dari data contoh.']},
     {k:[/teks berjalan|running text|pita|ticker|live|pembeli terbaru/],a:['Teks berjalan di atas halaman menampilkan kabar UMKM terbaru, pembeli yang baru membeli, dan ulasan baru. Di versi demo ini isinya data buatan. Arahkan kursor ke teks untuk menghentikannya sebentar.']},
-    {k:[/beli|pesan|order|bayar|checkout|keranjang|pembayaran/,/mau beli|cara beli|ingin beli|pesan produk/],a:['LoBiz berfungsi sebagai direktori dan etalase. Untuk membeli, hubungi UMKM-nya langsung, misalnya lewat tombol "💬 Hubungi via WhatsApp" di halaman detail kalau pemilik sudah mengisinya. Sistem pembayaran dalam situs belum tersedia.']},
+    {k:[/beli|pesan|order|bayar|checkout|keranjang|pembayaran/,/mau beli|cara beli|ingin beli|pesan produk/],a:['Di halaman UMKM, tekan tombol "🛒 Beli" pada produk (perlu akun pelanggan), isi alamat, kode pos, lalu pilih pembayaran: kartu, GoPay, OVO, DANA, ShopeePay, QRIS, atau transfer bank. Catatan: ini hanya simulasi, jadi setelah semua terisi tidak ada pembayaran atau pesanan sungguhan. Untuk transaksi nyata, hubungi UMKM lewat chat atau WhatsApp.']},
     {k:[/whatsapp|wa\b|hubungi (umkm|penjual|toko)|kontak (umkm|penjual|toko)/],a:['Tombol WhatsApp muncul di halaman UMKM yang pemiliknya sudah mengisi nomor di tab "🎨 Halaman Toko". Kalau tombolnya tidak ada, berarti pemilik belum mengisi nomor.']},
     {k:[/gratis|biaya|bayar.*daftar|harga langganan|tarif|berbayar/],a:['Mendaftarkan UMKM dan memasang halaman toko di LoBiz gratis. 🎉']},
     {k:[/gelap|dark|terang|tema (gelap|terang)|mode/],a:['Ganti tampilan terang/gelap lewat tombol tema di bagian atas halaman (ikon bulan/matahari). Pilihan Anda tersimpan di browser.']},
@@ -1607,5 +1609,260 @@ document.addEventListener('DOMContentLoaded', init);
     try{ chats=JSON.parse(e.newValue||'[]'); }catch(x){ return; }
     if(st.cur&&!st.cur.draft) st.cur=chats.find(function(c){ return c.id===st.cur.id; })||null;
     if(st.open&&dom) render(); else updateBadge();
+  });
+})();
+
+/* =============================================================
+   PANDUAN: tur interaktif (spotlight) untuk pemula
+   ============================================================= */
+(function(){
+  var SEEN='LoBiz_guide_seen', tour=null, T=null, G=null;
+  function vis(el){ return el&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden'; }
+  function pick(sel){ if(!sel) return null; var l=document.querySelectorAll(sel); for(var i=0;i<l.length;i++) if(vis(l[i])) return l[i]; return null; }
+  function firstUmkm(){ var v=DB.umkm.filter(function(u){ return u.status==='terverifikasi'; }); return v.length?v[0].id:null; }
+  function tab(n){ return function(){ var a=pick('[data-dashtab="'+n+'"]'); if(a) a.click(); }; }
+  function toHome(){ if(state.view!=='home') navigateTo('home'); }
+  function toDetail(){ var id=firstUmkm(); if(id&&state.view!=='detail') navigateTo('detail',{detailUmkmId:id}); }
+  var TRACKS={
+    visitor:{icon:'🧭',name:'Pengunjung & Pelanggan',desc:'Cari UMKM, lihat halaman toko, chat, dan beri ulasan.',steps:[
+      {ic:'👋',t:'Selamat datang di LoBiz!',x:'LoBiz (Lokal Bisnis Lo Bisa) adalah etalase UMKM lokal. Tur singkat ini menunjukkan bagian-bagian penting website. Tekan Lanjut untuk mulai.',before:toHome},
+      {ic:'📣',t:'Kabar terbaru',x:'Teks berjalan ini menampilkan UMKM baru, pembeli terbaru, dan ulasan baru. Arahkan kursor untuk menghentikannya. (Datanya buatan untuk demo.)',sel:'#ticker'},
+      {ic:'🔎',t:'Cari UMKM',x:'Ketik nama usaha, lalu pilih kategori atau kota untuk mempersempit hasil.',sel:'#search-form'},
+      {ic:'🔥',t:'Urutkan sesuai selera',x:'Pilih Hot, Trending, Terlaris, Pembeli terbanyak, Terbaru, dan lainnya. Barisnya bisa digeser ke kiri dan kanan.',sel:'#sort-chips'},
+      {ic:'🏪',t:'Kartu UMKM',x:'Setiap kartu menampilkan foto, label (Hot, Trending, Terlaris, Baru), rating, dan jumlah pembeli. Klik kartu untuk membuka halaman tokonya.',sel:'#directory-grid .umkm-card'},
+      {ic:'🌗',t:'Tema gelap atau terang',x:'Ganti tampilan sesuai kenyamanan mata Anda.',sel:'#theme-toggle'},
+      {ic:'🤖',t:'Tanya Loby kapan saja',x:'Loby adalah asisten otomatis untuk pertanyaan seputar website. Tidak perlu akun, dan jendelanya bisa digeser.',sel:'#lb-fab'},
+      {ic:'🔐',t:'Masuk atau buat akun',x:'Menjelajah itu bebas. Tapi untuk chat dengan UMKM dan menulis ulasan, Anda perlu akun pelanggan (gratis). Punya usaha? Pilih Daftarkan UMKM.',sel:'#nav-actions'},
+      {ic:'🖼️',t:'Halaman toko UMKM',x:'Di sini ada banner, slogan, tombol WhatsApp, dan cerita usaha dari pemiliknya.',sel:'#view-detail .detail-hero',before:toDetail},
+      {ic:'💬',t:'Chat langsung dengan UMKM',x:'Klik tombol ini untuk bertanya soal produk atau pesanan. Balasan muncul di tombol "💬 Pesan" di navbar.',sel:'#detail-chat'},
+      {ic:'📷',t:'Galeri & produk',x:'Lihat foto toko dan produk. Klik foto untuk memperbesar.',sel:'#detail-galeri'},
+      {ic:'🛒',t:'Beli produk',x:'Tekan Beli pada produk, isi alamat dan pilih pembayaran (kartu, GoPay, OVO, DANA, ShopeePay, QRIS, atau transfer bank). Perlu akun pelanggan. Ini hanya simulasi: tidak ada pembayaran sungguhan.',sel:'#detail-produk'},
+      {ic:'⭐',t:'Tulis ulasan',x:'Setelah masuk dengan akun pelanggan, pilih bintang dan tulis komentar. Ulasan dengan lencana "Resmi" berasal dari Tim LoBiz.',sel:'#review-gate, #rating-form'},
+      {ic:'🎉',t:'Siap menjelajah!',x:'Itu dia dasar-dasarnya. Buka lagi panduan ini lewat tombol ❓ Panduan kapan saja.',before:toHome}
+    ]},
+    owner:{icon:'🏪',name:'Pemilik UMKM',need:'owner',demo:'siti / siti123',desc:'Kelola produk, foto, cerita toko, dan pesan pelanggan.',steps:[
+      {ic:'📊',t:'Dashboard toko Anda',x:'Ini pusat kendali usaha Anda. Badge di sini menunjukkan status verifikasi dari admin.',sel:'#owner-toko-nama',before:function(){ navigateTo('owner'); tab('ringkasan')(); }},
+      {ic:'💰',t:'Ringkasan penjualan',x:'Pantau pendapatan, unit terjual, rating, dan jumlah produk. Grafik di bawahnya menunjukkan tren dan produk terlaris.',sel:'#stat-pendapatan'},
+      {ic:'📦',t:'Kelola produk',x:'Tambah produk beserta harganya, dan catat penjualan supaya angka dashboard ikut terbarui.',sel:'#owner-tab-produk',before:tab('produk')},
+      {ic:'🎨',t:'Foto utama toko',x:'Unggah banner, logo, dan foto "Tentang kami". Tanpa foto, LoBiz menampilkan gambar contoh.',sel:'#owner-tab-halaman .up-grid',before:tab('halaman')},
+      {ic:'✍️',t:'Cerita & tampilan',x:'Isi slogan, cerita usaha, nomor WhatsApp, dan pilih warna halaman, lalu klik Simpan halaman.',sel:'#halaman-form'},
+      {ic:'🖼️',t:'Galeri toko',x:'Unggah sampai 12 foto toko, produk, atau suasana. Pilih jenis foto dan tambahkan keterangan.',sel:'#owner-galeri'},
+      {ic:'📷',t:'Foto tiap produk',x:'Pasang foto khusus untuk setiap produk agar lebih menarik di halaman toko.',sel:'#owner-produk-foto'},
+      {ic:'🏬',t:'Profil toko',x:'Perbarui nama usaha, kota, dan deskripsi singkat Anda di sini.',sel:'#owner-tab-profil',before:tab('profil')},
+      {ic:'📨',t:'Pesan dari pelanggan',x:'Pesan dari pelanggan dan Tim LoBiz masuk ke sini. Angka merah berarti ada pesan belum dibaca.',sel:'#msg-open'},
+      {ic:'🎉',t:'Toko Anda siap tampil!',x:'Lengkapi foto dan cerita, lalu balas pesan dengan cepat agar pelanggan percaya.',before:tab('ringkasan')}
+    ]},
+    admin:{icon:'🛡️',name:'Admin / Tim LoBiz',need:'admin',demo:'admin / admin123',desc:'Verifikasi UMKM, pantau data, dan chat dengan UMKM.',steps:[
+      {ic:'📈',t:'Dashboard admin',x:'Ringkasan jumlah UMKM, yang sudah diverifikasi, yang menunggu, dan jumlah ulasan.',sel:'#admin-stat-total',before:function(){ navigateTo('admin'); tab('ringkasan')(); }},
+      {ic:'✅',t:'Verifikasi pendaftar',x:'UMKM baru muncul di sini. Tinjau datanya lalu setujui atau tolak.',sel:'#admin-pending-list',before:tab('verifikasi')},
+      {ic:'📋',t:'Semua UMKM',x:'Daftar lengkap UMKM beserta statusnya.',sel:'#admin-all-table-body',before:tab('semua')},
+      {ic:'💬',t:'Chat dengan UMKM',x:'Buka 💬 Pesan, pilih UMKM dari daftar, lalu kirim pesan. Anda juga bisa memakai tombol "Chat sebagai Tim LoBiz" di halaman UMKM.',sel:'#msg-open'},
+      {ic:'⭐',t:'Ulasan resmi',x:'Di halaman UMKM, Anda bisa menulis ulasan resmi Tim LoBiz yang tampil paling atas dengan lencana khusus.',before:tab('ringkasan')}
+    ]}
+  };
+  function role(){ var u=currentUser(); return u?u.role:'guest'; }
+  function buildTour(){
+    if(T) return;
+    T=document.createElement('div'); T.id='tour'; T.className='hidden';
+    T.innerHTML='<div class="tour-block"></div><div class="tour-spot"></div><div class="tour-card" role="dialog" aria-live="polite"><button type="button" class="tour-x" aria-label="Tutup">✕</button><div class="tour-ic"></div><div class="tour-step"></div><h4></h4><p></p><div class="tour-bar"><i></i></div><div class="tour-actions"><button type="button" class="tour-skip">Lewati</button><span><button type="button" class="tour-prev">‹ Kembali</button><button type="button" class="tour-next">Lanjut ›</button></span></div></div>';
+    document.body.appendChild(T);
+    T.querySelector('.tour-x').onclick=T.querySelector('.tour-skip').onclick=end;
+    T.querySelector('.tour-prev').onclick=function(){ show(tour.i-1); };
+    T.querySelector('.tour-next').onclick=function(){ show(tour.i+1); };
+    var raf=0; function re(){ if(!tour||raf) return; raf=requestAnimationFrame(function(){ raf=0; place(); }); }
+    window.addEventListener('resize',re); window.addEventListener('scroll',re,true);
+    document.addEventListener('keydown',function(e){
+      if(!tour) return;
+      if(e.key==='Escape') end(); else if(e.key==='ArrowRight') show(tour.i+1); else if(e.key==='ArrowLeft'&&tour.i>0) show(tour.i-1);
+    });
+  }
+  function place(){
+    if(!tour) return;
+    var spot=T.querySelector('.tour-spot'), card=T.querySelector('.tour-card'), el=tour.el, vw=window.innerWidth, vh=window.innerHeight;
+    var cw=Math.min(370,vw-24); card.style.width=cw+'px';
+    var ch=card.getBoundingClientRect().height, left, top;
+    if(el&&vis(el)){
+      var r=el.getBoundingClientRect(), p=8;
+      spot.style.cssText='left:'+(r.left-p)+'px;top:'+(r.top-p)+'px;width:'+(r.width+p*2)+'px;height:'+(r.height+p*2)+'px;opacity:1';
+      left=Math.min(Math.max(12,r.left+r.width/2-cw/2),vw-cw-12);
+      if(r.bottom+16+ch<vh) top=r.bottom+16+p;
+      else if(r.top-16-ch>0) top=r.top-16-ch-p;
+      else top=Math.max(12,vh-ch-16);
+    } else {
+      spot.style.cssText='left:50%;top:50%;width:0;height:0;opacity:1';
+      left=(vw-cw)/2; top=Math.max(12,(vh-ch)/2);
+    }
+    card.style.left=left+'px'; card.style.top=top+'px';
+  }
+  function show(i){
+    if(i<0) return;
+    if(i>=tour.steps.length){ end(); return; }
+    tour.i=i; var s=tour.steps[i];
+    try{ if(s.before) s.before(); }catch(e){}
+    var card=T.querySelector('.tour-card');
+    card.querySelector('.tour-ic').textContent=s.ic; card.querySelector('.tour-step').textContent='Langkah '+(i+1)+' dari '+tour.steps.length;
+    card.querySelector('h4').textContent=s.t; card.querySelector('p').textContent=s.x;
+    card.querySelector('.tour-bar i').style.width=((i+1)/tour.steps.length*100)+'%';
+    card.querySelector('.tour-prev').style.visibility=i===0?'hidden':'visible';
+    card.querySelector('.tour-next').textContent=i===tour.steps.length-1?'Selesai ✓':'Lanjut ›';
+    card.classList.remove('pop'); void card.offsetWidth; card.classList.add('pop');
+    setTimeout(function(){
+      if(!tour||tour.i!==i) return;
+      var el=pick(s.sel); tour.el=el;
+      if(el){ el.scrollIntoView({block:'center',behavior:'smooth'}); setTimeout(place,420); }
+      place();
+    },s.before?260:30);
+  }
+  function startTour(key){
+    closeMenu(); buildTour();
+    tour={steps:TRACKS[key].steps,i:0,el:null,view:state.view,detail:state.detailUmkmId};
+    T.classList.remove('hidden'); requestAnimationFrame(function(){ T.classList.add('on'); }); show(0);
+  }
+  function end(){
+    if(!tour) return;
+    var v=tour.view, d=tour.detail; tour=null; T.classList.remove('on'); setTimeout(function(){ T.classList.add('hidden'); },250);
+    try{ localStorage.setItem(SEEN,'1'); }catch(e){}
+    if(state.view!==v) navigateTo(v,v==='detail'?{detailUmkmId:d}:undefined);
+  }
+  function openMenu(){
+    try{ localStorage.setItem(SEEN,'1'); }catch(e){}
+    var h=document.getElementById('guide-hint'); if(h) h.classList.remove('show');
+    var b=document.getElementById('guide-open'); if(b) b.classList.remove('pulse');
+    if(!G){
+      G=document.createElement('div'); G.id='guide-overlay';
+      G.addEventListener('click',function(e){ if(e.target===G||e.target.closest('.guide-x')) closeMenu(); });
+      document.body.appendChild(G);
+      document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&G.classList.contains('open')) closeMenu(); });
+    }
+    var r=role();
+    G.innerHTML='<div class="guide-box"><button type="button" class="guide-x" aria-label="Tutup">✕</button><div class="guide-head"><img src="logo.png" alt="LoBiz"><h3>Panduan LoBiz</h3><p>Pilih panduan sesuai peran Anda. Tur interaktif akan menyorot bagian penting halaman langkah demi langkah.</p></div><div class="guide-cards">'+
+      Object.keys(TRACKS).map(function(k){
+        var t=TRACKS[k], ok=!t.need||t.need===r, rec=(k==='visitor'&&(r==='guest'||r==='customer'))||t.need===r;
+        return '<div class="guide-card'+(rec?' rec':'')+'">'+(rec?'<span class="guide-rec">Disarankan</span>':'')+'<div class="guide-ic">'+t.icon+'</div><b>'+t.name+'</b><p>'+t.desc+'</p><small>'+t.steps.length+' langkah</small>'+
+          (ok?'<button type="button" class="btn btn-primary btn-sm" data-guide="'+k+'">Mulai tur ▶</button>':'<button type="button" class="btn btn-outline btn-sm" data-guide-login="1">Masuk dulu</button><em>Akun demo: '+t.demo+'</em>')+'</div>';
+      }).join('')+'</div><p class="guide-foot">Tips: tekan Esc untuk menutup tur, dan panah kiri/kanan untuk berpindah langkah. Ingin jawaban cepat? Tanya Loby di pojok kanan bawah.</p></div>';
+    G.querySelectorAll('[data-guide]').forEach(function(b){ b.onclick=function(){ startTour(b.dataset.guide); }; });
+    G.querySelectorAll('[data-guide-login]').forEach(function(b){ b.onclick=function(){ closeMenu(); openAuthModal('login'); }; });
+    G.classList.add('open');
+  }
+  function closeMenu(){ if(G) G.classList.remove('open'); }
+  window.openGuide=openMenu;
+  document.addEventListener('click',function(e){ if(e.target.closest&&e.target.closest('#guide-open')) openMenu(); });
+  document.addEventListener('DOMContentLoaded',function(){
+    var seen=false; try{ seen=localStorage.getItem(SEEN)==='1'; }catch(e){}
+    if(seen) return;
+    var b=document.getElementById('guide-open'); if(!b) return;
+    b.classList.add('pulse');
+    setTimeout(function(){ var h=document.getElementById('guide-hint'); if(h&&!tour) h.classList.add('show'); },2500);
+    setTimeout(function(){ var h=document.getElementById('guide-hint'); if(h) h.classList.remove('show'); },12000);
+  });
+})();
+
+/* =============================================================
+   CHECKOUT (SIMULASI): tidak ada pembayaran nyata, tidak ada data tersimpan
+   ============================================================= */
+(function(){
+  var SHIP=10000, co=null, O=null;
+  var PAY=[['card','💳','Kartu kredit/debit'],['gopay','🟢','GoPay'],['ovo','🟣','OVO'],['dana','🔵','DANA'],['shopeepay','🟠','ShopeePay'],['qris','▦','QRIS'],['bank','🏦','Transfer bank']];
+  function f(id,label,html,hint){ return '<div class="co-f"><label for="'+id+'">'+label+'</label>'+html+(hint?'<small class="co-hint">'+hint+'</small>':'')+'<small class="co-err"></small></div>'; }
+  function inp(id,ph,extra){ return '<input type="text" id="'+id+'" placeholder="'+(ph||'')+'" autocomplete="off" '+(extra||'')+'>'; }
+  function qrSvg(seed){
+    var n=25, r=hashStr(seed)||7, out='';
+    function rnd(){ r=(r*1103515245+12345)&0x7fffffff; return r/0x7fffffff; }
+    function fin(x,y){ return '<rect x="'+x+'" y="'+y+'" width="7" height="7" fill="#000"/><rect x="'+(x+1)+'" y="'+(y+1)+'" width="5" height="5" fill="#fff"/><rect x="'+(x+2)+'" y="'+(y+2)+'" width="3" height="3" fill="#000"/>'; }
+    for(var y=0;y<n;y++) for(var x=0;x<n;x++){
+      var inF=(x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9);
+      if(!inF&&rnd()>0.52) out+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="#000"/>';
+    }
+    return '<svg viewBox="-1 -1 27 27" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg"><rect x="-1" y="-1" width="27" height="27" fill="#fff"/>'+out+fin(0,0)+fin(n-7,0)+fin(0,n-7)+'</svg>';
+  }
+  function panel(k){
+    if(k==='card') return f('co-cnum','Nomor kartu',inp('co-cnum','0000 0000 0000 0000','inputmode="numeric" maxlength="23"'),'Demo: jangan masukkan nomor kartu asli.')+f('co-cname','Nama di kartu',inp('co-cname','Nama pemilik kartu','maxlength="40"'))+
+      '<div class="co-row">'+f('co-cexp','Berlaku hingga',inp('co-cexp','MM/YY','inputmode="numeric" maxlength="5"'))+f('co-ccvv','CVV',inp('co-ccvv','123','inputmode="numeric" maxlength="4"'))+'</div>';
+    if(k==='qris') return '<div class="co-qr">'+qrSvg((co?co.p.id:'x')+'qris')+'<p>Pindai kode QR ini dengan aplikasi pembayaran apa pun yang mendukung QRIS. (Contoh tampilan, bukan kode asli.)</p></div>';
+    if(k==='bank') return f('co-bank','Pilih bank','<select id="co-bank"><option value="">Pilih bank</option><option>BCA</option><option>Mandiri</option><option>BNI</option><option>BRI</option><option>CIMB Niaga</option></select>');
+    var nm=PAY.filter(function(p){ return p[0]===k; })[0][2];
+    return f('co-ewa','Nomor HP '+nm,inp('co-ewa','0812xxxxxxxx','inputmode="tel" maxlength="15"'),'Nomor yang terhubung dengan akun '+nm+' Anda.');
+  }
+  function ensureDom(){
+    if(O) return;
+    O=document.createElement('div'); O.id='co-overlay';
+    O.innerHTML='<div class="co-box" role="dialog" aria-label="Checkout"><button type="button" class="co-x" aria-label="Tutup">✕</button><div class="co-grid">'+
+      '<form id="co-form" novalidate><h3>🛒 Checkout</h3>'+
+      '<h5>1. Alamat pengiriman</h5>'+
+      '<div class="co-row">'+f('co-nama','Nama penerima',inp('co-nama','Nama lengkap','maxlength="40" autocomplete="name"'))+f('co-telp','Nomor telepon',inp('co-telp','0812xxxxxxxx','inputmode="tel" maxlength="15"'))+'</div>'+
+      f('co-alamat','Alamat lengkap','<textarea id="co-alamat" rows="2" maxlength="160" placeholder="Jalan, nomor rumah, RT/RW, kelurahan"></textarea>')+
+      '<div class="co-row">'+f('co-kota','Kota / kabupaten',inp('co-kota','Mis. Bandung','maxlength="40"'))+f('co-pos','Kode pos',inp('co-pos','40115','inputmode="numeric" maxlength="5"'))+'</div>'+
+      '<h5>2. Metode pembayaran</h5><div class="co-pay" id="co-pay">'+PAY.map(function(p,i){ return '<label class="co-pm"><input type="radio" name="co-pm" value="'+p[0]+'"'+(i===0?' checked':'')+'><span><i>'+p[1]+'</i>'+p[2]+'</span></label>'; }).join('')+'</div>'+
+      '<div id="co-panel"></div>'+
+      '<button type="submit" class="btn btn-primary btn-block" id="co-buy">Beli sekarang</button>'+
+      '<p class="co-demo">Mode demo: ini hanya simulasi checkout. Tidak ada pembayaran yang diproses dan tidak ada data yang disimpan.</p></form>'+
+      '<aside class="co-sum" id="co-sum"></aside></div></div>';
+    document.body.appendChild(O);
+    O.addEventListener('click',function(e){ if(e.target===O||e.target.closest('.co-x')) close(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&O.classList.contains('open')) close(); });
+    O.querySelector('#co-pay').addEventListener('change',function(){ setPanel(); });
+    O.addEventListener('input',function(e){
+      var t=e.target, id=t.id;
+      if(id==='co-cnum') t.value=t.value.replace(/\D/g,'').slice(0,19).replace(/(.{4})/g,'$1 ').trim();
+      else if(id==='co-cexp'){ var d=t.value.replace(/\D/g,'').slice(0,4); t.value=d.length>2?d.slice(0,2)+'/'+d.slice(2):d; }
+      else if(id==='co-pos'||id==='co-ccvv') t.value=t.value.replace(/\D/g,'');
+      else if(id==='co-telp'||id==='co-ewa') t.value=t.value.replace(/[^\d+]/g,'');
+      if(t.classList&&t.classList.contains('bad')){ t.classList.remove('bad'); var er=t.parentNode.querySelector('.co-err'); if(er) er.textContent=''; }
+    });
+    O.addEventListener('click',function(e){
+      var b=e.target.closest('[data-q]'); if(!b||!co) return;
+      co.qty=Math.min(20,Math.max(1,co.qty+parseInt(b.dataset.q,10))); sum();
+    });
+    O.querySelector('#co-form').addEventListener('submit',function(e){ e.preventDefault(); validate(); });
+  }
+  function val(id){ var el=O.querySelector('#'+id); return el?el.value.trim():''; }
+  function err(id,msg){ var el=O.querySelector('#'+id); if(!el) return; el.classList.add('bad'); var er=el.parentNode.querySelector('.co-err'); if(er) er.textContent=msg; }
+  function validate(){
+    Array.prototype.forEach.call(O.querySelectorAll('.bad'),function(x){ x.classList.remove('bad'); });
+    Array.prototype.forEach.call(O.querySelectorAll('.co-err'),function(x){ x.textContent=''; });
+    var bad=0; function need(id,msg,ok){ if(!ok){ err(id,msg); bad++; } }
+    need('co-nama','Nama penerima wajib diisi.',val('co-nama').length>=2);
+    need('co-telp','Masukkan nomor telepon yang valid.',/^\+?\d{9,14}$/.test(val('co-telp')));
+    need('co-alamat','Alamat lengkap wajib diisi.',val('co-alamat').length>=8);
+    need('co-kota','Kota wajib diisi.',val('co-kota').length>=2);
+    need('co-pos','Kode pos harus 5 angka.',/^\d{5}$/.test(val('co-pos')));
+    var k=O.querySelector('input[name="co-pm"]:checked').value;
+    if(k==='card'){
+      var num=val('co-cnum').replace(/\s/g,''), ex=val('co-cexp').match(/^(\d{2})\/(\d{2})$/);
+      need('co-cnum','Nomor kartu harus 13–19 angka.',/^\d{13,19}$/.test(num));
+      need('co-cname','Nama di kartu wajib diisi.',val('co-cname').length>=2);
+      need('co-cexp','Gunakan format MM/YY yang valid.',!!ex&&+ex[1]>=1&&+ex[1]<=12);
+      need('co-ccvv','CVV 3–4 angka.',/^\d{3,4}$/.test(val('co-ccvv')));
+    } else if(k==='bank') need('co-bank','Pilih bank terlebih dahulu.',!!val('co-bank'));
+    else if(k!=='qris') need('co-ewa','Masukkan nomor HP yang valid.',/^\+?\d{9,14}$/.test(val('co-ewa')));
+    if(bad){ var first=O.querySelector('.bad'); if(first) first.scrollIntoView({block:'center',behavior:'smooth'}); return; }
+    /* Semua data valid: sengaja tidak terjadi apa-apa (simulasi). */
+  }
+  function setPanel(){
+    var k=O.querySelector('input[name="co-pm"]:checked').value;
+    O.querySelector('#co-panel').innerHTML=panel(k);
+  }
+  function sum(){
+    var u=co.u, p=co.p, sub=p.harga*co.qty;
+    O.querySelector('#co-sum').innerHTML='<h5>Ringkasan pesanan</h5><div class="co-item"><img src="'+produkImg(u,p)+'" alt=""><div><b>'+escapeHtml(p.nama)+'</b><small>'+escapeHtml(u.nama)+'</small></div></div>'+
+      '<div class="co-qty"><span>Jumlah</span><div><button type="button" data-q="-1" aria-label="Kurangi">−</button><b>'+co.qty+'</b><button type="button" data-q="1" aria-label="Tambah">+</button></div></div>'+
+      '<div class="co-line"><span>Harga ('+co.qty+'×)</span><span>'+formatRupiah(sub)+'</span></div><div class="co-line"><span>Ongkos kirim (contoh)</span><span>'+formatRupiah(SHIP)+'</span></div>'+
+      '<div class="co-line co-total"><span>Total</span><span>'+formatRupiah(sub+SHIP)+'</span></div>';
+  }
+  function close(){ if(O) O.classList.remove('open'); }
+  function open(umkmId,pid){
+    var cu=currentUser(), role=cu?cu.role:'guest';
+    if(role==='guest'){ showToast('Masuk atau daftar akun pelanggan untuk membeli produk.','error'); openAuthModal('login'); return; }
+    if(role!=='customer'){ showToast('Hanya akun pelanggan yang bisa membeli produk.','error'); return; }
+    var u=findUmkm(umkmId), p=u&&u.produk.find(function(x){ return x.id===pid; }); if(!p) return;
+    ensureDom(); co={u:u,p:p,qty:1};
+    var form=O.querySelector('#co-form'); form.reset(); O.querySelector('#co-nama').value=cu.nama||'';
+    Array.prototype.forEach.call(O.querySelectorAll('.bad'),function(x){ x.classList.remove('bad'); });
+    Array.prototype.forEach.call(O.querySelectorAll('.co-err'),function(x){ x.textContent=''; });
+    setPanel(); sum(); O.classList.add('open');
+  }
+  document.addEventListener('click',function(e){
+    var b=e.target.closest&&e.target.closest('[data-buy]'); if(b) open(state.detailUmkmId,b.dataset.buy);
   });
 })();
