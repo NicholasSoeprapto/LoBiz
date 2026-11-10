@@ -319,6 +319,7 @@ function navigateTo(view,opts){
 /* =============================================================
    7. RENDER: NAVBAR
    ============================================================= */
+var CARTBTN='<button type="button" class="btn btn-ghost btn-sm cart-nav-btn" id="cart-open" aria-label="Buka keranjang">🛒 <span class="txt">Keranjang</span> <span class="cart-badge" style="display:none">0</span></button>';
 var MSGBTN='<button type="button" class="btn btn-ghost btn-sm msg-nav-btn" id="msg-open">💬 Pesan <span class="msg-badge" style="display:none">0</span></button>';
 function renderNavAuthArea(){
   var wrap=document.getElementById('nav-actions');
@@ -333,7 +334,7 @@ function renderNavAuthArea(){
   }
   var label=user.role==='admin'?'Dashboard Admin':'Dashboard Toko';
   var target=user.role==='admin'?'admin':'owner';
-  wrap.innerHTML=MSGBTN+
+  wrap.innerHTML=(user.role==='customer'?CARTBTN:'')+MSGBTN+
     '<div class="nav-user">'+
       '<div><div class="nav-user-name">'+escapeHtml(user.nama)+'</div>'+
       '<div class="nav-user-role">'+({admin:'Administrator',owner:'Pemilik UMKM',customer:'Pelanggan'}[user.role]||'')+'</div></div>'+
@@ -452,7 +453,7 @@ function renderDetail(id){
   document.getElementById('detail-rating-text').textContent=count?(avg.toFixed(1)+' dari '+count+' ulasan'):'Belum ada ulasan';
   var cuB=currentUser(), canBuy=!cuB||cuB.role==='customer';
   document.getElementById('detail-produk').innerHTML=u.produk.map(function(p){
-    return '<div class="product-row"><div class="product-left"><img class="product-thumb" src="'+produkImg(u,p)+'" alt=""><div><div class="product-name">'+escapeHtml(p.nama)+'</div><div class="product-sold">'+produkTerjual(u,p.id)+' terjual</div></div></div><div class="product-right"><div class="product-price">'+formatRupiah(p.harga)+'</div>'+(canBuy?'<button type="button" class="btn btn-primary btn-sm buy-btn" data-buy="'+p.id+'">🛒 Beli</button>':'')+'</div></div>';
+    return '<div class="product-row"><div class="product-left"><img class="product-thumb" src="'+produkImg(u,p)+'" alt=""><div><div class="product-name">'+escapeHtml(p.nama)+'</div><div class="product-sold">'+produkTerjual(u,p.id)+' terjual</div></div></div><div class="product-right"><div class="product-price">'+formatRupiah(p.harga)+'</div>'+(canBuy?'<button type="button" class="btn btn-primary btn-sm buy-btn" data-cart="'+p.id+'">🛒 + Keranjang</button>':'')+'</div></div>';
   }).join('')||'<p class="form-hint">Belum ada produk terdaftar.</p>';
   var reviews=ratingsFor(u.id).slice().sort(function(a,b){ return (b.official?1:0)-(a.official?1:0) || new Date(b.tanggal)-new Date(a.tanggal); });
   document.getElementById('detail-review-count').textContent=reviews.length;
@@ -1313,7 +1314,7 @@ document.addEventListener('DOMContentLoaded', init);
     {k:[/filter|urut|sort|cari|pencarian|search|kategori|kota|terlaris|trending|hot|terbaru|paling/],a:['Di direktori Anda bisa mencari nama, memfilter kategori dan kota, atau memilih urutan lewat tombol: 🔥 Hot, 📈 Trending, 🏆 Terlaris, 👥 Pembeli terbanyak, 🆕 Terbaru, ⭐ Rating tertinggi, dan 💬 Ulasan terbanyak. Ada juga filter rating minimal.'],q:['Apa arti Hot dan Trending?']},
     {k:[/arti (hot|trending)|hot (dan|vs|&) trending|beda.*(hot|trending)|label/],a:['Hot = UMKM dengan aktivitas pembeli tinggi belakangan ini (dipengaruhi rating). Trending = UMKM yang pembelinya naik dibanding beberapa hari sebelumnya. Terlaris dihitung dari total unit terjual. Semua angka di versi demo ini berasal dari data contoh.']},
     {k:[/teks berjalan|running text|pita|ticker|live|pembeli terbaru/],a:['Teks berjalan di atas halaman menampilkan kabar UMKM terbaru, pembeli yang baru membeli, dan ulasan baru. Di versi demo ini isinya data buatan. Arahkan kursor ke teks untuk menghentikannya sebentar.']},
-    {k:[/beli|pesan|order|bayar|checkout|keranjang|pembayaran/,/mau beli|cara beli|ingin beli|pesan produk/],a:['Di halaman UMKM, tekan tombol "🛒 Beli" pada produk (perlu akun pelanggan), isi alamat, kode pos, lalu pilih pembayaran: kartu, GoPay, OVO, DANA, ShopeePay, QRIS, atau transfer bank. Catatan: ini hanya simulasi, jadi setelah semua terisi tidak ada pembayaran atau pesanan sungguhan. Untuk transaksi nyata, hubungi UMKM lewat chat atau WhatsApp.']},
+    {k:[/beli|pesan|order|bayar|checkout|keranjang|pembayaran/,/mau beli|cara beli|ingin beli|pesan produk/],a:['Di halaman UMKM, tekan "🛒 + Keranjang" pada produk (perlu akun pelanggan). Buka 🛒 Keranjang di bagian atas untuk mengatur jumlah, lalu tekan "Lanjut ke checkout", isi alamat, kode pos, dan pilih pembayaran: kartu, GoPay, OVO, DANA, ShopeePay, QRIS, atau transfer bank. Catatan: ini hanya simulasi, jadi setelah semua terisi tidak ada pembayaran atau pesanan sungguhan. Untuk transaksi nyata, hubungi UMKM lewat chat atau WhatsApp.']},
     {k:[/whatsapp|wa\b|hubungi (umkm|penjual|toko)|kontak (umkm|penjual|toko)/],a:['Tombol WhatsApp muncul di halaman UMKM yang pemiliknya sudah mengisi nomor di tab "🎨 Halaman Toko". Kalau tombolnya tidak ada, berarti pemilik belum mengisi nomor.']},
     {k:[/gratis|biaya|bayar.*daftar|harga langganan|tarif|berbayar/],a:['Mendaftarkan UMKM dan memasang halaman toko di LoBiz gratis. 🎉']},
     {k:[/gelap|dark|terang|tema (gelap|terang)|mode/],a:['Ganti tampilan terang/gelap lewat tombol tema di bagian atas halaman (ikon bulan/matahari). Pilihan Anda tersimpan di browser.']},
@@ -1590,7 +1591,7 @@ document.addEventListener('DOMContentLoaded', init);
     if(t) setTimeout(function(){ dom.input.focus(); },250);
   }
   function closeDrawer(){ st.open=false; if(dom) dom.o.classList.remove('open'); }
-  window.updateMsgBadge=function(){ ensure(); updateBadge(); };
+  window.updateMsgBadge=function(){ ensure(); updateBadge(); if(window.updateCartBadge) window.updateCartBadge(); };
   window.setupDetailChatBtn=function(u){
     var b=document.getElementById('detail-chat'); if(!b) return;
     ensure(); var m=me();
@@ -1636,7 +1637,7 @@ document.addEventListener('DOMContentLoaded', init);
       {ic:'🖼️',t:'Halaman toko UMKM',x:'Di sini ada banner, slogan, tombol WhatsApp, dan cerita usaha dari pemiliknya.',sel:'#view-detail .detail-hero',before:toDetail},
       {ic:'💬',t:'Chat langsung dengan UMKM',x:'Klik tombol ini untuk bertanya soal produk atau pesanan. Balasan muncul di tombol "💬 Pesan" di navbar.',sel:'#detail-chat'},
       {ic:'📷',t:'Galeri & produk',x:'Lihat foto toko dan produk. Klik foto untuk memperbesar.',sel:'#detail-galeri'},
-      {ic:'🛒',t:'Beli produk',x:'Tekan Beli pada produk, isi alamat dan pilih pembayaran (kartu, GoPay, OVO, DANA, ShopeePay, QRIS, atau transfer bank). Perlu akun pelanggan. Ini hanya simulasi: tidak ada pembayaran sungguhan.',sel:'#detail-produk'},
+      {ic:'🛒',t:'Keranjang & checkout',x:'Tekan + Keranjang pada produk, buka 🛒 Keranjang di navbar, lalu checkout: isi alamat dan pilih pembayaran (kartu, GoPay, OVO, DANA, ShopeePay, QRIS, atau transfer bank). Perlu akun pelanggan. Ini hanya simulasi: tidak ada pembayaran sungguhan.',sel:'#detail-produk'},
       {ic:'⭐',t:'Tulis ulasan',x:'Setelah masuk dengan akun pelanggan, pilih bintang dan tulis komentar. Ulasan dengan lencana "Resmi" berasal dari Tim LoBiz.',sel:'#review-gate, #rating-form'},
       {ic:'🎉',t:'Siap menjelajah!',x:'Itu dia dasar-dasarnya. Buka lagi panduan ini lewat tombol ❓ Panduan kapan saja.',before:toHome}
     ]},
@@ -1779,7 +1780,7 @@ document.addEventListener('DOMContentLoaded', init);
   function panel(k){
     if(k==='card') return f('co-cnum','Nomor kartu',inp('co-cnum','0000 0000 0000 0000','inputmode="numeric" maxlength="23"'),'Demo: jangan masukkan nomor kartu asli.')+f('co-cname','Nama di kartu',inp('co-cname','Nama pemilik kartu','maxlength="40"'))+
       '<div class="co-row">'+f('co-cexp','Berlaku hingga',inp('co-cexp','MM/YY','inputmode="numeric" maxlength="5"'))+f('co-ccvv','CVV',inp('co-ccvv','123','inputmode="numeric" maxlength="4"'))+'</div>';
-    if(k==='qris') return '<div class="co-qr">'+qrSvg((co?co.p.id:'x')+'qris')+'<p>Pindai kode QR ini dengan aplikasi pembayaran apa pun yang mendukung QRIS. (Contoh tampilan, bukan kode asli.)</p></div>';
+    if(k==='qris') return '<div class="co-qr">'+qrSvg((co&&co.items&&co.items[0]?co.items[0].p.id:'x')+'qris')+'<p>Pindai kode QR ini dengan aplikasi pembayaran apa pun yang mendukung QRIS. (Contoh tampilan, bukan kode asli.)</p></div>';
     if(k==='bank') return f('co-bank','Pilih bank','<select id="co-bank"><option value="">Pilih bank</option><option>BCA</option><option>Mandiri</option><option>BNI</option><option>BRI</option><option>CIMB Niaga</option></select>');
     var nm=PAY.filter(function(p){ return p[0]===k; })[0][2];
     return f('co-ewa','Nomor HP '+nm,inp('co-ewa','0812xxxxxxxx','inputmode="tel" maxlength="15"'),'Nomor yang terhubung dengan akun '+nm+' Anda.');
@@ -1844,25 +1845,113 @@ document.addEventListener('DOMContentLoaded', init);
     O.querySelector('#co-panel').innerHTML=panel(k);
   }
   function sum(){
-    var u=co.u, p=co.p, sub=p.harga*co.qty;
-    O.querySelector('#co-sum').innerHTML='<h5>Ringkasan pesanan</h5><div class="co-item"><img src="'+produkImg(u,p)+'" alt=""><div><b>'+escapeHtml(p.nama)+'</b><small>'+escapeHtml(u.nama)+'</small></div></div>'+
-      '<div class="co-qty"><span>Jumlah</span><div><button type="button" data-q="-1" aria-label="Kurangi">−</button><b>'+co.qty+'</b><button type="button" data-q="1" aria-label="Tambah">+</button></div></div>'+
-      '<div class="co-line"><span>Harga ('+co.qty+'×)</span><span>'+formatRupiah(sub)+'</span></div><div class="co-line"><span>Ongkos kirim (contoh)</span><span>'+formatRupiah(SHIP)+'</span></div>'+
-      '<div class="co-line co-total"><span>Total</span><span>'+formatRupiah(sub+SHIP)+'</span></div>';
+    var sub=0, shops={}, n=0;
+    var rows=co.items.map(function(it){
+      sub+=it.p.harga*it.qty; shops[it.u.id]=1; n+=it.qty;
+      return '<div class="co-item"><img src="'+produkImg(it.u,it.p)+'" alt=""><div><b>'+escapeHtml(it.p.nama)+'</b><small>'+escapeHtml(it.u.nama)+' · '+it.qty+'× '+formatRupiah(it.p.harga)+'</small></div><span class="co-ip">'+formatRupiah(it.p.harga*it.qty)+'</span></div>';
+    }).join('');
+    var shopN=Object.keys(shops).length, ship=SHIP*shopN;
+    O.querySelector('#co-sum').innerHTML='<h5>Ringkasan pesanan</h5><div class="co-items">'+rows+'</div>'+
+      '<div class="co-line"><span>Subtotal ('+n+' barang)</span><span>'+formatRupiah(sub)+'</span></div><div class="co-line"><span>Ongkos kirim ('+shopN+' toko, contoh)</span><span>'+formatRupiah(ship)+'</span></div>'+
+      '<div class="co-line co-total"><span>Total</span><span>'+formatRupiah(sub+ship)+'</span></div><button type="button" class="btn btn-ghost btn-sm" data-backcart="1" style="margin-top:10px">← Ubah keranjang</button>';
   }
   function close(){ if(O) O.classList.remove('open'); }
-  function open(umkmId,pid){
-    var cu=currentUser(), role=cu?cu.role:'guest';
-    if(role==='guest'){ showToast('Masuk atau daftar akun pelanggan untuk membeli produk.','error'); openAuthModal('login'); return; }
-    if(role!=='customer'){ showToast('Hanya akun pelanggan yang bisa membeli produk.','error'); return; }
-    var u=findUmkm(umkmId), p=u&&u.produk.find(function(x){ return x.id===pid; }); if(!p) return;
-    ensureDom(); co={u:u,p:p,qty:1};
-    var form=O.querySelector('#co-form'); form.reset(); O.querySelector('#co-nama').value=cu.nama||'';
+  function open(){
+    var cu=currentUser();
+    if(!cu||cu.role!=='customer'){ showToast('Masuk dengan akun pelanggan untuk checkout.','error'); openAuthModal('login'); return; }
+    var items=window.LoCart?window.LoCart.detail():[];
+    if(!items.length){ showToast('Keranjang masih kosong.','error'); return; }
+    ensureDom(); co={items:items};
+    O.querySelector('#co-form').reset(); O.querySelector('#co-nama').value=cu.nama||'';
     Array.prototype.forEach.call(O.querySelectorAll('.bad'),function(x){ x.classList.remove('bad'); });
     Array.prototype.forEach.call(O.querySelectorAll('.co-err'),function(x){ x.textContent=''; });
     setPanel(); sum(); O.classList.add('open');
   }
+  window.openCheckout=open;
   document.addEventListener('click',function(e){
-    var b=e.target.closest&&e.target.closest('[data-buy]'); if(b) open(state.detailUmkmId,b.dataset.buy);
+    if(e.target.closest&&e.target.closest('[data-backcart]')){ close(); if(window.openCart) window.openCart(); }
+  });
+})();
+
+/* =============================================================
+   KERANJANG (per akun pelanggan, tersimpan di browser)
+   ============================================================= */
+(function(){
+  var D=null;
+  function cid(){ var u=currentUser(); return u&&u.role==='customer'?u.id:null; }
+  function key(){ var i=cid(); return i?'LoBiz_cart_'+i:null; }
+  function load(){ var k=key(); if(!k) return []; try{ var a=JSON.parse(localStorage.getItem(k)||'[]'); return Array.isArray(a)?a:[]; }catch(e){ return []; } }
+  function save(a){ var k=key(); if(!k) return; try{ localStorage.setItem(k,JSON.stringify(a)); }catch(e){} badge(); }
+  function detail(){
+    return load().map(function(it){
+      var u=findUmkm(it.umkmId), p=u&&u.produk.find(function(x){ return x.id===it.pid; });
+      return p?{u:u,p:p,qty:it.qty}:null;
+    }).filter(Boolean);
+  }
+  function badge(){
+    var n=detail().reduce(function(s,i){ return s+i.qty; },0);
+    Array.prototype.forEach.call(document.querySelectorAll('.cart-badge'),function(b){ b.textContent=n; b.style.display=n?'inline-flex':'none'; });
+  }
+  function bump(){ var b=document.getElementById('cart-open'); if(!b) return; b.classList.remove('bump'); void b.offsetWidth; b.classList.add('bump'); }
+  function add(umkmId,pid){
+    var cu=currentUser(), role=cu?cu.role:'guest';
+    if(role==='guest'){ showToast('Masuk atau daftar akun pelanggan untuk memakai keranjang.','error'); openAuthModal('login'); return; }
+    if(role!=='customer'){ showToast('Hanya akun pelanggan yang bisa berbelanja.','error'); return; }
+    var a=load(), ex=a.find(function(x){ return x.umkmId===umkmId&&x.pid===pid; });
+    if(ex) ex.qty=Math.min(20,ex.qty+1); else a.push({umkmId:umkmId,pid:pid,qty:1});
+    save(a); bump(); showToast('Ditambahkan ke keranjang 🛒','success');
+    if(D&&D.classList.contains('open')) render();
+  }
+  function ensureDom(){
+    if(D) return;
+    D=document.createElement('div'); D.id='cart-overlay';
+    D.innerHTML='<aside class="cart-box" role="dialog" aria-label="Keranjang"><header><b>🛒 Keranjang</b><button type="button" class="cart-x" aria-label="Tutup">✕</button></header><div class="cart-body" id="cart-body"></div><footer id="cart-foot"></footer></aside>';
+    document.body.appendChild(D);
+    D.addEventListener('click',function(e){
+      if(e.target===D||e.target.closest('.cart-x')){ closeCart(); return; }
+      var q=e.target.closest('[data-cq]'), rm=e.target.closest('[data-crm]');
+      if(q||rm){
+        var k=(q||rm).dataset.cq||(q||rm).dataset.crm, p=k.split('|'), a=load();
+        a=a.map(function(x){ if(x.umkmId===p[0]&&x.pid===p[1]&&q) x.qty=Math.min(20,Math.max(1,x.qty+parseInt(q.dataset.d,10))); return x; });
+        if(rm) a=a.filter(function(x){ return !(x.umkmId===p[0]&&x.pid===p[1]); });
+        save(a); render(); return;
+      }
+      if(e.target.closest('#cart-clear')){ save([]); render(); return; }
+      if(e.target.closest('#cart-go')){ closeCart(); if(window.openCheckout) window.openCheckout(); }
+    });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&D.classList.contains('open')) closeCart(); });
+  }
+  function render(){
+    var items=detail(), body=document.getElementById('cart-body'), foot=document.getElementById('cart-foot');
+    if(!items.length){
+      body.innerHTML='<div class="cart-empty"><div>🛍️</div><b>Keranjang masih kosong</b><p>Buka halaman UMKM dan tekan "+ Keranjang" pada produk yang Anda suka.</p></div>';
+      foot.innerHTML=''; return;
+    }
+    var groups={}, order=[];
+    items.forEach(function(i){ if(!groups[i.u.id]){ groups[i.u.id]=[]; order.push(i.u.id); } groups[i.u.id].push(i); });
+    var sub=0;
+    body.innerHTML=order.map(function(id){
+      var g=groups[id];
+      return '<div class="cart-group"><h6>🏪 '+escapeHtml(g[0].u.nama)+'</h6>'+g.map(function(i){
+        sub+=i.p.harga*i.qty; var k=i.u.id+'|'+i.p.id;
+        return '<div class="cart-item"><img src="'+produkImg(i.u,i.p)+'" alt=""><div class="cart-info"><b>'+escapeHtml(i.p.nama)+'</b><small>'+formatRupiah(i.p.harga)+'</small>'+
+          '<div class="cart-qty"><button type="button" data-cq="'+k+'" data-d="-1" aria-label="Kurangi">−</button><span>'+i.qty+'</span><button type="button" data-cq="'+k+'" data-d="1" aria-label="Tambah">+</button></div></div>'+
+          '<div class="cart-right"><b>'+formatRupiah(i.p.harga*i.qty)+'</b><button type="button" class="cart-rm" data-crm="'+k+'" aria-label="Hapus">🗑</button></div></div>';
+      }).join('')+'</div>';
+    }).join('');
+    foot.innerHTML='<div class="cart-sub"><span>Subtotal</span><b>'+formatRupiah(sub)+'</b></div><small>Ongkos kirim dihitung saat checkout.</small><div class="cart-btns"><button type="button" class="btn btn-ghost btn-sm" id="cart-clear">Kosongkan</button><button type="button" class="btn btn-primary" id="cart-go">Lanjut ke checkout →</button></div>';
+  }
+  function openCart(){
+    var cu=currentUser();
+    if(!cu||cu.role!=='customer'){ showToast('Masuk dengan akun pelanggan untuk membuka keranjang.','error'); openAuthModal('login'); return; }
+    ensureDom(); render(); D.classList.add('open');
+  }
+  function closeCart(){ if(D) D.classList.remove('open'); }
+  window.LoCart={detail:detail};
+  window.openCart=openCart;
+  window.updateCartBadge=badge;
+  document.addEventListener('click',function(e){
+    var t=e.target.closest&&e.target.closest('[data-cart]'); if(t){ add(state.detailUmkmId,t.dataset.cart); return; }
+    if(e.target.closest&&e.target.closest('#cart-open')) openCart();
   });
 })();
