@@ -16,6 +16,8 @@ Proyek ini mendukung **SDG 9: Industri, Inovasi, dan Infrastruktur**.
 - Halaman detail UMKM: banner, logo, slogan, cerita usaha, galeri foto (bisa diperbesar), daftar produk, dan tombol WhatsApp.
 - Rating bintang dan ulasan untuk setiap UMKM.
 - **Chat bantuan Loby**: tombol chat di pojok kanan bawah dengan asisten otomatis bernama Loby (bot berbasis aturan, tanpa server). Menjawab pertanyaan umum seputar pendaftaran, foto toko, ulasan, filter, dan akun demo, lengkap dengan tombol saran jawaban, animasi mengetik, dan riwayat chat tersimpan di browser.
+- **Akun pelanggan**: pengunjung bisa menjelajah situs dan mengobrol dengan Loby tanpa akun, tetapi chat dengan UMKM dan menulis ulasan memerlukan akun pelanggan (daftar lewat "Daftar Pelanggan"). Satu pelanggan hanya punya satu ulasan per UMKM, dan bisa memperbaruinya.
+- **Pesan**: pelanggan (yang sudah login) bisa chat dengan UMKM pilihannya lewat tombol "Chat dengan UMKM" di halaman detail. Pemilik UMKM dan admin punya kotak masuk lewat tombol "💬 Pesan" di navbar (dengan penanda belum dibaca). Admin bisa memulai chat dengan UMKM mana pun. Pesan disimpan di localStorage dan tersinkron antar tab di browser yang sama.
 - Teks berjalan (kanan ke kiri) berisi UMKM terbaru, pembeli terbaru, dan ulasan baru. Datanya buatan (demo).
 
 **Untuk pemilik UMKM**
@@ -65,6 +67,7 @@ Font diambil dari Google Fonts, jadi koneksi internet dibutuhkan agar tampilan f
 | Admin | `admin` | `admin123` |
 | Pemilik UMKM | `siti` | `siti123` |
 | Pemilik UMKM | `made` | `made123` |
+| Pelanggan | `budi` | `budi123` |
 
 Data awal (UMKM, produk, transaksi, dan ulasan) dibuat otomatis saat halaman pertama kali dibuka. Tombol reset data demo tersedia di aplikasi untuk mengembalikan ke kondisi awal.
 
@@ -78,6 +81,7 @@ Data awal (UMKM, produk, transaksi, dan ulasan) dibuat otomatis saat halaman per
 
 ## Pengembangan lanjutan
 
+- Chat antar pengguna lintas perangkat (butuh backend, mis. WebSocket).
 - Menghubungkan Loby ke model AI atau layanan live chat sungguhan (saat ini jawabannya berbasis aturan).
 - Backend dan database sungguhan (autentikasi, penyimpanan gambar di cloud).
 - Foto stock asli atau unggahan ke penyimpanan objek.

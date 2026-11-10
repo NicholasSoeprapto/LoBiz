@@ -190,6 +190,7 @@
             <h1 id="detail-nama" style="color:#fff; font-size:30px; margin-top:8px;"></h1>
             <p class="detail-tagline" id="detail-tagline"></p>
             <a id="detail-wa" class="btn btn-gold btn-sm" target="_blank" rel="noopener" style="display:none;margin:10px 0 4px;">💬 Hubungi via WhatsApp</a>
+            <button type="button" id="detail-chat" class="btn btn-primary btn-sm" style="display:none;margin:10px 0 4px 6px;">💬 Chat dengan UMKM</button>
             <div class="detail-meta">
               <span id="detail-kategori"></span>
               <span>·</span>
@@ -228,6 +229,7 @@
         <div>
           <div class="panel">
             <h4 id="review-form-title">Beri rating &amp; ulasan</h4>
+            <div class="review-gate" id="review-gate" style="display:none"></div>
             <form id="rating-form">
               <div class="form-group">
                 <label for="rating-nama">Nama Anda</label>
@@ -489,7 +491,8 @@
     </div>
     <div class="tab-switch">
       <button type="button" class="active" data-authtab="login">Masuk</button>
-      <button type="button" data-authtab="register">Daftarkan UMKM</button>
+      <button type="button" data-authtab="register">Daftar UMKM</button>
+      <button type="button" data-authtab="customer">Daftar Pelanggan</button>
     </div>
 
     <!-- LOGIN -->
@@ -514,7 +517,8 @@
       <div class="demo-box">
         <b>Akun demo</b><br>
         Admin — user: <b>admin</b> · sandi: <b>admin123</b><br>
-        Pemilik UMKM — user: <b>siti</b> · sandi: <b>siti123</b>
+        Pemilik UMKM — user: <b>siti</b> · sandi: <b>siti123</b><br>
+        Pelanggan — user: <b>budi</b> · sandi: <b>budi123</b>
       </div>
     </form>
 
@@ -559,6 +563,14 @@
       </div>
       <button type="submit" class="btn btn-primary btn-block">Daftarkan usaha saya</button>
       <p class="form-hint" style="margin-top:12px;">Usaha Anda akan tampil di direktori publik setelah diverifikasi admin.</p>
+    </form>
+    <!-- REGISTER PELANGGAN -->
+    <form id="register-customer-form" class="hidden">
+      <div class="form-group"><label for="cust-nama">Nama</label><input type="text" id="cust-nama" maxlength="40" required autocomplete="name"></div>
+      <div class="form-group"><label for="cust-username">Username</label><input type="text" id="cust-username" maxlength="24" required autocomplete="username"><div class="form-error" id="cust-username-error">Username sudah dipakai.</div></div>
+      <div class="form-group"><label for="cust-password">Kata sandi</label><div class="pw-wrap"><input type="password" id="cust-password" minlength="6" required autocomplete="new-password"><button type="button" class="pw-eye" aria-label="Tampilkan kata sandi" data-pw-toggle="cust-password"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg></button></div><div class="form-hint">Minimal 6 karakter.</div></div>
+      <button type="submit" class="btn btn-primary btn-block">Buat akun pelanggan</button>
+      <p class="form-hint" style="margin-top:12px;">Akun pelanggan diperlukan untuk chat dengan UMKM dan menulis ulasan. Menjelajah situs dan chat dengan Loby tetap bisa tanpa akun.</p>
     </form>
   </div>
 </div>

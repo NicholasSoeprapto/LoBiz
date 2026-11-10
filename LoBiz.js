@@ -190,6 +190,11 @@ async function buildSeedDB(){
   return {users:users,umkm:umkm,ratings:ratings};
 }
 
+async function ensureDemoCustomer(){
+  if(DB.users.some(function(u){ return u.username==='budi'; })) return;
+  DB.users.push({id:'u-cust-budi',role:'customer',username:'budi',passwordHash:await hashPassword('budi123'),nama:'Budi'});
+  saveDB();
+}
 async function initDB(){
   var existing=loadDB();
   if(existing){ DB=existing; return; }
@@ -314,24 +319,28 @@ function navigateTo(view,opts){
 /* =============================================================
    7. RENDER: NAVBAR
    ============================================================= */
+var MSGBTN='<button type="button" class="btn btn-ghost btn-sm msg-nav-btn" id="msg-open">💬 Pesan <span class="msg-badge" style="display:none">0</span></button>';
 function renderNavAuthArea(){
   var wrap=document.getElementById('nav-actions');
   var user=currentUser();
   if(!user){
     wrap.innerHTML=
       '<button class="btn btn-outline btn-sm" data-action="open-login">Masuk</button>'+
+      '<button class="btn btn-ghost btn-sm" data-action="open-register-customer">Daftar Pelanggan</button>'+
       '<button class="btn btn-primary btn-sm" data-action="open-register-umkm">Daftarkan UMKM</button>';
+    if(window.updateMsgBadge) window.updateMsgBadge();
     return;
   }
   var label=user.role==='admin'?'Dashboard Admin':'Dashboard Toko';
   var target=user.role==='admin'?'admin':'owner';
-  wrap.innerHTML=
+  wrap.innerHTML=MSGBTN+
     '<div class="nav-user">'+
       '<div><div class="nav-user-name">'+escapeHtml(user.nama)+'</div>'+
-      '<div class="nav-user-role">'+(user.role==='admin'?'Administrator':'Pemilik UMKM')+'</div></div>'+
-      '<button class="btn btn-primary btn-sm" data-navto="'+target+'">'+label+'</button>'+
+      '<div class="nav-user-role">'+({admin:'Administrator',owner:'Pemilik UMKM',customer:'Pelanggan'}[user.role]||'')+'</div></div>'+
+      (user.role==='customer'?'':'<button class="btn btn-primary btn-sm" data-navto="'+target+'">'+label+'</button>')+
       '<button class="btn btn-ghost btn-sm" data-action="logout">Keluar</button>'+
     '</div>';
+  if(window.updateMsgBadge) window.updateMsgBadge();
 }
 
 /* =============================================================
@@ -451,11 +460,19 @@ function renderDetail(id){
   }).join(''):'<p class="form-hint">Jadilah yang pertama memberi ulasan.</p>';
   document.getElementById('rating-form').reset();
   (function(){
-    var cu=currentUser(), adm=!!(cu&&cu.role==='admin');
-    var nm=document.getElementById('rating-nama');
-    nm.value=adm?'Tim LoBiz':''; nm.readOnly=adm;
+    var cu=currentUser(), role=cu?cu.role:'guest', adm=role==='admin', cust=role==='customer';
+    var form=document.getElementById('rating-form'), gate=document.getElementById('review-gate');
+    var nm=document.getElementById('rating-nama'), btn=document.getElementById('review-submit-btn');
+    form.style.display=(adm||cust)?'block':'none';
+    if(adm||cust){ nm.value=adm?'Tim LoBiz':cu.nama; nm.readOnly=true; }
     document.getElementById('review-form-title').textContent=adm?'Beri ulasan resmi Tim LoBiz':'Beri rating & ulasan';
-    document.getElementById('review-submit-btn').textContent=adm?'Kirim ulasan resmi':'Kirim ulasan';
+    btn.textContent=adm?'Kirim ulasan resmi':'Kirim ulasan';
+    if(cust){
+      var ex=DB.ratings.find(function(r){ return r.umkmId===u.id&&r.userId===cu.id; });
+      if(ex){ document.getElementById('rating-star-input').dataset.value=String(ex.rating); updateStarInputUI(); document.getElementById('rating-komentar').value=ex.komentar||''; btn.textContent='Perbarui ulasan'; }
+    }
+    gate.style.display=(adm||cust)?'none':'block';
+    if(!adm&&!cust) gate.innerHTML=(role==='owner'?'<p>Akun pemilik UMKM tidak bisa menulis ulasan. Masuk dengan akun pelanggan untuk memberi ulasan.</p>':'<p>Untuk menulis ulasan, Anda perlu masuk dengan akun pelanggan. Gratis dan hanya butuh satu menit.</p>')+'<div class="review-gate-btns"><button type="button" class="btn btn-primary btn-sm" data-action="open-login">Masuk</button><button type="button" class="btn btn-outline btn-sm" data-action="open-register-customer">Daftar Pelanggan</button></div>';
   })();
   var si=document.getElementById('rating-star-input');
   si.dataset.value='0';
@@ -653,7 +670,8 @@ function setAuthTab(tab){
   document.querySelectorAll('[data-authtab]').forEach(function(b){ b.classList.toggle('active',b.dataset.authtab===tab); });
   document.getElementById('login-form').classList.toggle('hidden',tab!=='login');
   document.getElementById('register-form').classList.toggle('hidden',tab!=='register');
-  document.getElementById('auth-title').textContent=tab==='login'?'Masuk':'Daftarkan UMKM';
+  document.getElementById('register-customer-form').classList.toggle('hidden',tab!=='customer');
+  document.getElementById('auth-title').textContent=tab==='login'?'Masuk':tab==='customer'?'Daftar Pelanggan':'Daftarkan UMKM';
 }
 
 /* =============================================================
@@ -681,6 +699,7 @@ function wireEvents(){
       var a=action.dataset.action;
       if(a==='open-login')         openAuthModal('login');
       else if(a==='open-register-umkm') openAuthModal('register');
+      else if(a==='open-register-customer') openAuthModal('customer');
       else if(a==='close-modal')   closeModal();
       else if(a==='logout')        logout();
       else if(a==='reset-demo'){
@@ -744,8 +763,25 @@ function wireEvents(){
     if(!result.ok){ setFieldError(passEl,true); document.getElementById('login-error').style.display='block'; return; }
     closeModal(); renderNavAuthArea();
     showToast('Selamat datang kembali, '+result.user.nama+'.','success');
-    navigateTo(result.user.role==='admin'?'admin':'owner');
+    if(result.user.role==='customer'){ if(state.view==='detail') renderDetail(state.detailUmkmId); }
+    else navigateTo(result.user.role==='admin'?'admin':'owner');
     this.reset();
+  });
+
+  document.getElementById('register-customer-form').addEventListener('submit',async function(e){
+    e.preventDefault();
+    var ok=true;
+    ['cust-nama','cust-username','cust-password'].forEach(function(id){ if(!requiredValid(document.getElementById(id))) ok=false; });
+    var uEl=document.getElementById('cust-username'), pEl=document.getElementById('cust-password'), er=document.getElementById('cust-username-error');
+    er.style.display='none';
+    if(DB.users.some(function(x){ return x.username.toLowerCase()===uEl.value.trim().toLowerCase(); })){ setFieldError(uEl,true); er.style.display='block'; ok=false; }
+    if(pEl.value.length<6){ setFieldError(pEl,true); ok=false; }
+    if(!ok) return;
+    var id=uid('u'), hash=await hashPassword(pEl.value);
+    DB.users.push({id:id,role:'customer',username:uEl.value.trim(),passwordHash:hash,nama:document.getElementById('cust-nama').value.trim().slice(0,40)});
+    saveDB(); setSession(id); closeModal(); renderNavAuthArea();
+    showToast('Akun pelanggan berhasil dibuat. Selamat datang!','success');
+    this.reset(); if(state.view==='detail') renderDetail(state.detailUmkmId);
   });
 
   document.getElementById('register-form').addEventListener('submit',async function(e){
@@ -784,7 +820,12 @@ function wireEvents(){
     document.getElementById('rating-star-error').style.display=starVal>0?'none':'block';
     if(!okNama||starVal===0) return;
     var cu2=currentUser(), isAdm=!!(cu2&&cu2.role==='admin');
-    DB.ratings.push({id:uid('r'),umkmId:state.detailUmkmId,nama:isAdm?'Tim LoBiz':namaEl.value.trim().slice(0,60),official:isAdm,rating:starVal,komentar:document.getElementById('rating-komentar').value.trim().slice(0,240),tanggal:isoDateOnly(new Date())});
+    if(!cu2||cu2.role==='owner'){ showToast('Masuk atau daftar sebagai pelanggan untuk menulis ulasan.','error'); openAuthModal('login'); return; }
+    if(!isAdm){
+      var ex2=DB.ratings.find(function(r){ return r.umkmId===state.detailUmkmId&&r.userId===cu2.id; });
+      if(ex2){ ex2.rating=starVal; ex2.komentar=document.getElementById('rating-komentar').value.trim().slice(0,400); ex2.tanggal=isoDateOnly(new Date()); saveDB(); showToast('Ulasan Anda diperbarui.','success'); renderDetail(state.detailUmkmId); return; }
+    }
+    DB.ratings.push({id:uid('r'),umkmId:state.detailUmkmId,userId:cu2.id,nama:isAdm?'Tim LoBiz':cu2.nama,official:isAdm,rating:starVal,komentar:document.getElementById('rating-komentar').value.trim().slice(0,240),tanggal:isoDateOnly(new Date())});
     saveDB(); showToast(isAdm?'Ulasan resmi Tim LoBiz terkirim!':'Terima kasih atas ulasan Anda!','success'); renderDetail(state.detailUmkmId);
   });
 
@@ -1024,6 +1065,7 @@ function initDarkMode(){
    ============================================================= */
 async function init(){
   await initDB();
+  await ensureDemoCustomer();
   wireEvents();
   setupExtras();
   renderNavAuthArea();
@@ -1138,6 +1180,7 @@ function renderHalamanTab(u){
   }).join(''):'<p class="form-hint">Tambahkan produk dulu di tab Produk.</p>';
 }
 function renderDetailVisuals(u){
+  if(window.setupDetailChatBtn) window.setupDetailChatBtn(u);
   var pal=TEMA[u.tema]||TEMA.merah, hero=document.querySelector('#view-detail .detail-hero');
   hero.style.backgroundImage='linear-gradient(120deg,rgba('+pal[0]+',.93),rgba('+pal[1]+',.68)),url("'+(u.cover||stockImg(u.kategori,0,u.id))+'")';
   hero.style.backgroundSize='cover'; hero.style.backgroundPosition='center';
@@ -1246,22 +1289,24 @@ document.addEventListener('DOMContentLoaded', init);
 (function(){
   var BOT='Loby', KEY='LoBiz_chat_v1';
   var AVATAR='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8A0A25"/><stop offset=".6" stop-color="#F2142B"/><stop offset="1" stop-color="#FF6A1F"/></linearGradient></defs><circle cx="50" cy="50" r="50" fill="url(#a)"/><path d="M22 40 L30 24 H70 L78 40Z" fill="#fff"/><path d="M30 24 L26 40 M42 24 L40 40 M54 24 L54 40 M66 24 L68 40" stroke="#F2142B" stroke-width="5" opacity=".85"/><path d="M22 40 q7 9 14 0 q7 9 14 0 q7 9 14 0 q7 9 14 0" fill="#FFAA00"/><rect x="28" y="50" width="44" height="30" rx="10" fill="#fff"/><circle cx="41" cy="62" r="4" fill="#3A0613"/><circle cx="59" cy="62" r="4" fill="#3A0613"/><circle cx="42.3" cy="60.7" r="1.3" fill="#fff"/><circle cx="60.3" cy="60.7" r="1.3" fill="#fff"/><path d="M42 70 q8 8 16 0" stroke="#3A0613" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="35" cy="69" r="3.2" fill="#FF8A8A" opacity=".7"/><circle cx="65" cy="69" r="3.2" fill="#FF8A8A" opacity=".7"/></svg>');
-  var CHIPS=['Apa itu LoBiz?','Cara daftar UMKM','Cara upload foto toko','Cara beri ulasan','Filter & urutan'];
+  var CHIPS=['Apa itu LoBiz?','Cara daftar UMKM','Cara buat akun pelanggan','Cara chat dengan UMKM','Cara beri ulasan','Cara upload foto toko','Filter & urutan'];
   var KB=[
     {k:[/\b(halo|hai|hi|hello|hallo|pagi|siang|sore|malam|permisi|p)\b/],a:['Halo! 👋 Saya Loby, asisten LoBiz. Ada yang bisa saya bantu soal website ini?','Hai! Saya Loby 😊 Mau tanya soal pendaftaran UMKM, ulasan, atau fitur lain? Silakan.'],q:CHIPS},
     {k:[/terima kasih|makasih|thanks|thank you|thx|mantap|oke makasih/],a:['Sama-sama! 😊 Kalau ada yang lain, tanya saja ya.','Senang bisa membantu! Semoga usahanya makin laris 🚀']},
     {k:[/siapa (kamu|anda)|(kamu|anda) siapa|nama (kamu|mu|anda)|kamu (itu )?apa|manusia|robot|bot\b|\bai\b/],a:['Saya Loby, asisten otomatis LoBiz. Saya bukan manusia: saya bot berbasis aturan yang menjawab pertanyaan umum soal website ini. 🤖','Namaku Loby! Bot asisten LoBiz. Jawabanku otomatis, jadi kalau pertanyaannya rumit, coba pakai kata kunci yang lebih sederhana ya.']},
     {k:[/apa itu|apa sih|tentang lobiz|lobiz itu|jelaskan lobiz|website ini|situs ini|fungsi/],a:['LoBiz (Lokal Bisnis Lo Bisa) adalah direktori dan etalase digital untuk UMKM lokal. Pemilik usaha bisa memasang halaman toko, produk, dan foto, sedangkan pengunjung bisa menemukan UMKM, melihat rating, dan memberi ulasan. 🏪'],q:['Cara daftar UMKM','Filter & urutan','Apakah gratis?']},
+    {k:[/chat (dengan|ke|sama)|chat umkm|kirim pesan|pesan (ke|untuk) (umkm|toko|penjual)|tanya (penjual|umkm|toko)|kotak masuk|inbox|bicara (dengan|sama) (umkm|penjual)/,/chat|pesan/],a:['Anda bisa chat langsung dengan UMKM lewat tombol "💬 Chat dengan UMKM" di halaman detail UMKM. Fitur ini butuh akun pelanggan (gratis). Setelah masuk, balasan muncul di tombol "💬 Pesan" di bagian atas. Pemilik UMKM dan admin juga memakai tombol itu untuk kotak masuk mereka.'],q:['Cara buat akun pelanggan','Cara beri ulasan']},
+    {k:[/akun pelanggan|daftar pelanggan|buat akun (pelanggan|customer)|akun customer|daftar customer|daftar sebagai pelanggan/,/pelanggan|customer/],a:['Untuk membuat akun pelanggan: klik "Daftar Pelanggan" di bagian atas, isi nama, username, dan kata sandi (minimal 6 karakter). Akun ini gratis dan dibutuhkan untuk chat dengan UMKM serta menulis ulasan. Menjelajah situs dan mengobrol dengan saya tetap bisa tanpa akun. 😊'],q:['Cara chat dengan UMKM']},
     {k:[/daftar|registrasi|bergabung|buat akun|pendaftaran|sign ?up|gabung/],a:['Cara mendaftarkan UMKM: 1) klik tombol "Daftarkan UMKM" di beranda, 2) isi data akun dan data usaha, 3) kirim. Setelah itu pendaftaran Anda ditinjau admin dan, kalau disetujui, usaha Anda tampil di direktori. ✅'],q:['Berapa lama verifikasi?','Cara upload foto toko']},
     {k:[/verifikasi|disetujui|menunggu|pending|status|ditolak|lama.*(setuju|verif)/],a:['Setiap pendaftaran ditinjau admin LoBiz lebih dulu. Selama belum disetujui, status usaha Anda "menunggu" dan belum muncul di direktori publik. Cek statusnya lewat dashboard setelah login. Kalau ditolak, perbaiki data usaha lalu daftar ulang.'],q:['Cara daftar UMKM','Lupa password']},
-    {k:[/login|masuk|log in|sign in|akun demo|demo|username/],a:['Klik tombol "Masuk" di pojok kanan atas, lalu isi username dan password. Untuk mencoba versi demo: admin → admin / admin123, pemilik UMKM → siti / siti123 atau made / made123.'],q:['Lupa password','Apa itu dashboard?']},
+    {k:[/login|masuk|log in|sign in|akun demo|demo|username/],a:['Klik tombol "Masuk" di pojok kanan atas, lalu isi username dan password. Untuk mencoba versi demo: admin → admin / admin123, pemilik UMKM → siti / siti123 atau made / made123, pelanggan → budi / budi123.'],q:['Lupa password','Apa itu dashboard?']},
     {k:[/lupa|reset password|ganti password|kata sandi|sandi/],a:['Karena ini versi demo, belum ada fitur reset password lewat email. Kalau lupa, Anda bisa mendaftar dengan akun baru atau memakai akun demo. Fitur reset akan ada saat LoBiz memakai server sungguhan.']},
     {k:[/upload|unggah|foto|gambar|banner|logo|galeri/],a:['Untuk memasang foto: login sebagai pemilik, buka dashboard lalu tab "🎨 Halaman Toko". Di sana Anda bisa mengunggah banner, logo, foto "Tentang kami", galeri (maksimal 12 foto), dan foto tiap produk. Foto otomatis dikecilkan supaya hemat penyimpanan. 📷','Foto toko diatur di dashboard → tab "🎨 Halaman Toko". Anda bisa mengunggah banner, logo, galeri, dan foto produk. Kalau belum ada foto, LoBiz menampilkan gambar contoh otomatis.'],q:['Cara atur halaman toko','Foto tidak mau terunggah']},
     {k:[/tidak (bisa|mau) (terunggah|upload|unggah)|gagal (upload|unggah)|penuh|kuota|storage|ukuran/,/upload|unggah|foto|gambar/],a:['Kalau unggahan gagal: pastikan file berupa gambar (JPG/PNG), lalu coba foto yang lebih kecil. Penyimpanan browser terbatas (sekitar 5 MB), jadi kalau sudah penuh, hapus beberapa foto galeri lalu coba lagi.']},
     {k:[/halaman toko|customi[sz]e|atur (halaman|toko|tampilan)|slogan|tentang kami|cerita usaha|warna halaman|tema/],a:['Di tab "🎨 Halaman Toko" Anda bisa mengisi slogan, cerita usaha, nomor WhatsApp, dan memilih warna halaman (merah, oranye, amber, atau hijau). Klik "Simpan halaman", lalu "Lihat halaman publik" untuk melihat hasilnya.']},
     {k:[/produk|barang|jualan|tambah.*produk|harga/],a:['Produk dikelola di dashboard pemilik, tab Produk: tambah, ubah, atau hapus produk beserta harganya. Foto produk bisa diatur di tab "🎨 Halaman Toko".'],q:['Cara upload foto toko','Catat penjualan']},
     {k:[/catat.*(jual|transaksi)|penjualan|transaksi|omzet|pendapatan|grafik|dashboard/],a:['Dashboard pemilik menampilkan ringkasan pendapatan, unit terjual, rating, grafik tren, dan produk terlaris. Catat penjualan lewat tab penjualan agar angkanya ikut terbarui.']},
-    {k:[/ulasan|review|rating|bintang|komentar|nilai/],a:['Untuk memberi ulasan: buka halaman detail UMKM, pilih bintang 1–5, isi nama dan komentar, lalu klik "Kirim ulasan". ⭐ Ulasan dengan lencana "✔ Ulasan Resmi" berasal dari Tim LoBiz dan selalu tampil paling atas.'],q:['Apa itu ulasan resmi?','Filter & urutan']},
+    {k:[/ulasan|review|rating|bintang|komentar|nilai/],a:['Untuk memberi ulasan, masuk dulu dengan akun pelanggan (gratis, daftar lewat "Daftar Pelanggan"). Lalu buka halaman detail UMKM, pilih bintang 1–5, tulis komentar, dan klik "Kirim ulasan". ⭐ Ulasan dengan lencana "✔ Ulasan Resmi" berasal dari Tim LoBiz dan selalu tampil paling atas.'],q:['Apa itu ulasan resmi?','Filter & urutan']},
     {k:[/resmi|tim lobiz|admin.*(ulas|review)/],a:['Ulasan resmi adalah penilaian dari Tim LoBiz (akun admin) untuk sebuah UMKM. Ulasan ini diberi lencana khusus dan diletakkan paling atas. Anda juga bisa memfilter UMKM yang punya ulasan resmi di direktori.']},
     {k:[/filter|urut|sort|cari|pencarian|search|kategori|kota|terlaris|trending|hot|terbaru|paling/],a:['Di direktori Anda bisa mencari nama, memfilter kategori dan kota, atau memilih urutan lewat tombol: 🔥 Hot, 📈 Trending, 🏆 Terlaris, 👥 Pembeli terbanyak, 🆕 Terbaru, ⭐ Rating tertinggi, dan 💬 Ulasan terbanyak. Ada juga filter rating minimal.'],q:['Apa arti Hot dan Trending?']},
     {k:[/arti (hot|trending)|hot (dan|vs|&) trending|beda.*(hot|trending)|label/],a:['Hot = UMKM dengan aktivitas pembeli tinggi belakangan ini (dipengaruhi rating). Trending = UMKM yang pembelinya naik dibanding beberapa hari sebelumnya. Terlaris dihitung dari total unit terjual. Semua angka di versi demo ini berasal dari data contoh.']},
@@ -1406,4 +1451,161 @@ document.addEventListener('DOMContentLoaded', init);
     setTimeout(function(){ el.greet.classList.remove('show'); },12000);
   }
   document.addEventListener('DOMContentLoaded',init);
+})();
+
+/* =============================================================
+   PESAN: admin ↔ UMKM dan pelanggan ↔ UMKM
+   (disimpan di localStorage browser, tersinkron antar tab)
+   ============================================================= */
+(function(){
+  var KEY='LoBiz_chats_v2', VKEY='LoBiz_visitor', chats=null, loaded=false, dom=null, st={open:false,cur:null};
+  function esc2(s){ return escapeHtml(String(s)); }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(chats)); }catch(e){ showToast('Penyimpanan browser penuh.','error'); } }
+  function seed(){
+    var now=Date.now();
+    function um(n){ var u=DB.users.find(function(x){ return x.username===n; }); return u&&u.umkmId; }
+    var a=um('siti'), b=um('made');
+    if(a){
+      chats.push({id:'c-seed1',umkmId:a,peerType:'customer',peerId:'u-cust-budi',peerName:'Budi',read:{},msgs:[{f:'peer',t:'Halo kak, produk yang di etalase masih ready stock?',ts:now-45*6e4}]});
+      chats.push({id:'c-seed2',umkmId:a,peerType:'admin',peerId:'admin',peerName:'Tim LoBiz',read:{},msgs:[{f:'peer',t:'Halo! Selamat bergabung di LoBiz 🎉 Kalau butuh bantuan melengkapi halaman toko, balas pesan ini ya.',ts:now-3*36e5}]});
+    }
+    if(b) chats.push({id:'c-seed3',umkmId:b,peerType:'customer',peerId:'v-demo-ayu',peerName:'Ayu',read:{},msgs:[{f:'peer',t:'Selamat siang, apakah bisa pesan dalam jumlah besar untuk acara kantor?',ts:now-2*36e5}]});
+  }
+  function ensure(){
+    if(loaded) return; loaded=true;
+    try{ var r=JSON.parse(localStorage.getItem(KEY)||'null'); chats=Array.isArray(r)?r:null; }catch(e){ chats=null; }
+    if(!chats){ chats=[]; seed(); save(); }
+  }
+  function visitor(){
+    var v=null; try{ v=JSON.parse(localStorage.getItem(VKEY)||'null'); }catch(e){}
+    if(!v||!v.id){ v={id:'v'+Math.random().toString(36).slice(2,10),name:''}; try{ localStorage.setItem(VKEY,JSON.stringify(v)); }catch(e){} }
+    return v;
+  }
+  function me(){
+    var u=currentUser();
+    if(u&&u.role==='admin') return {side:'peer',type:'admin',id:'admin',name:'Tim LoBiz'};
+    if(u&&u.role==='owner') return {side:'umkm',type:'owner',umkmId:u.umkmId,name:u.nama};
+    if(u&&u.role==='customer') return {side:'peer',type:'customer',id:u.id,name:u.nama};
+    return {side:'peer',type:'guest',id:null,name:''};
+  }
+  function lastTs(t){ return t.msgs.length?t.msgs[t.msgs.length-1].ts:0; }
+  function mine(m){
+    return chats.filter(function(t){
+      if(m.type==='admin') return t.peerType==='admin';
+      if(m.type==='owner') return t.umkmId===m.umkmId;
+      return t.peerType==='customer'&&t.peerId===m.id;
+    }).sort(function(a,b){ return lastTs(b)-lastTs(a); });
+  }
+  function unread(t,m){
+    var l=t.msgs[t.msgs.length-1]; if(!l) return false;
+    return m.side==='umkm'?(l.f==='peer'&&l.ts>(t.read.umkm||0)):(l.f==='umkm'&&l.ts>(t.read.peer||0));
+  }
+  function ft(ts){
+    var d=new Date(ts), n=new Date(), hm=('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2);
+    return d.toDateString()===n.toDateString()?hm:('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+' '+hm;
+  }
+  function find(umkmId,m){
+    return chats.find(function(t){ return t.umkmId===umkmId&&t.peerType===(m.type==='admin'?'admin':'customer')&&t.peerId===m.id; })||
+      {id:'c'+Date.now().toString(36)+Math.random().toString(36).slice(2,6),umkmId:umkmId,peerType:m.type==='admin'?'admin':'customer',peerId:m.id,peerName:m.name||'Pengunjung',msgs:[],read:{},draft:true};
+  }
+  function info(t,m){
+    var u=findUmkm(t.umkmId)||{nama:'UMKM',kategori:'Lainnya',kota:'',id:t.umkmId};
+    if(m.side==='umkm') return {title:t.peerType==='admin'?'Tim LoBiz':t.peerName,sub:t.peerType==='admin'?'Resmi · LoBiz':'Pelanggan',
+      av:t.peerType==='admin'?'<img src="logo.png" alt="">':'<span class="msg-av-i">'+esc2((t.peerName||'?').charAt(0).toUpperCase())+'</span>'};
+    return {title:u.nama,sub:u.kategori+(u.kota?' · '+u.kota:''),av:'<img src="'+(u.logo||stockImg(u.kategori,1,u.id))+'" alt="">'};
+  }
+  function updateBadge(){
+    if(!loaded) return;
+    var m=me(), n=mine(m).filter(function(t){ return unread(t,m); }).length;
+    Array.prototype.forEach.call(document.querySelectorAll('.msg-badge'),function(b){ b.textContent=n; b.style.display=n?'inline-flex':'none'; });
+  }
+  function ensureDom(){
+    if(dom) return;
+    var o=document.createElement('div'); o.id='msg-overlay';
+    o.innerHTML='<div class="msg-box" role="dialog" aria-label="Pesan">'+
+      '<aside class="msg-list"><header><b>💬 Pesan</b><button type="button" class="msg-x" id="msg-close" aria-label="Tutup">✕</button></header>'+
+      '<div class="msg-new" id="msg-new"><select id="msg-new-sel" aria-label="Pilih UMKM"></select><button type="button" class="btn btn-primary btn-sm" id="msg-new-btn">Chat</button></div>'+
+      '<div class="msg-threads" id="msg-threads"></div></aside>'+
+      '<section class="msg-conv"><header id="msg-head"></header><div class="msg-msgs" id="msg-msgs" aria-live="polite"></div>'+
+      '<form class="msg-form" id="msg-form"><div class="msg-row"><input type="text" id="msg-input" maxlength="500" placeholder="Tulis pesan..." autocomplete="off"><button type="submit" aria-label="Kirim">➤</button></div>'+
+      '<small class="msg-note">Demo: pesan tersimpan di browser ini. Masuk sebagai pemilik/admin di browser yang sama untuk membalas.</small></form></section></div>';
+    document.body.appendChild(o);
+    dom={o:o,box:o.querySelector('.msg-box'),threads:o.querySelector('#msg-threads'),head:o.querySelector('#msg-head'),msgs:o.querySelector('#msg-msgs'),form:o.querySelector('#msg-form'),input:o.querySelector('#msg-input'),nw:o.querySelector('#msg-new'),sel:o.querySelector('#msg-new-sel')};
+    o.addEventListener('click',function(e){ if(e.target===o) closeDrawer(); });
+    o.querySelector('#msg-close').addEventListener('click',closeDrawer);
+    dom.threads.addEventListener('click',function(e){
+      var b=e.target.closest('[data-tid]'); if(!b) return;
+      var m=me(); st.cur=(mine(m).concat(st.cur&&st.cur.draft?[st.cur]:[])).find(function(t){ return t.id===b.dataset.tid; })||null;
+      dom.box.classList.add('conv-open'); render();
+    });
+    dom.head.addEventListener('click',function(e){ if(e.target.closest('#msg-back')){ dom.box.classList.remove('conv-open'); } });
+    o.querySelector('#msg-new-btn').addEventListener('click',function(){
+      if(!dom.sel.value) return; st.cur=find(dom.sel.value,me()); dom.box.classList.add('conv-open'); render(); dom.input.focus();
+    });
+    dom.form.addEventListener('submit',function(e){
+      e.preventDefault();
+      var m=me(), text=dom.input.value.trim().slice(0,500);
+      if(!st.cur||!text) return;
+      if(m.type==='customer'&&m.name) st.cur.peerName=m.name;
+      if(st.cur.draft){ delete st.cur.draft; chats.push(st.cur); }
+      var now=Date.now(); st.cur.msgs.push({f:m.side,t:text,ts:now}); st.cur.read[m.side==='umkm'?'umkm':'peer']=now;
+      save(); dom.input.value=''; render();
+    });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&st.open) closeDrawer(); });
+  }
+  function render(){
+    var m=me(), list=mine(m);
+    if(st.cur&&st.cur.draft) list.unshift(st.cur);
+    dom.nw.style.display=m.type==='admin'?'flex':'none';
+    if(m.type==='admin'&&!dom.sel.options.length){
+      dom.sel.innerHTML=DB.umkm.filter(function(u){ return u.status==='terverifikasi'; }).map(function(u){ return '<option value="'+u.id+'">'+esc2(u.nama)+'</option>'; }).join('');
+    }
+    dom.threads.innerHTML=list.length?list.map(function(t){
+      var i=info(t,m), l=t.msgs[t.msgs.length-1];
+      return '<button type="button" class="msg-item'+(st.cur===t?' active':'')+'" data-tid="'+t.id+'"><span class="msg-av">'+i.av+'</span><span class="msg-meta"><b>'+esc2(i.title)+'</b><small>'+(l?esc2((l.f===m.side?'Anda: ':'')+l.t):'Belum ada pesan')+'</small></span>'+
+        '<span class="msg-side">'+(l?'<small>'+ft(l.ts)+'</small>':'')+(unread(t,m)?'<i class="msg-dot"></i>':'')+'</span></button>';
+    }).join(''):'<p class="msg-empty">'+(m.type==='owner'?'Belum ada pesan masuk.':m.type==='admin'?'Pilih UMKM di atas untuk memulai chat.':'Belum ada percakapan. Buka halaman UMKM lalu klik "Chat dengan UMKM".')+'</p>';
+    if(!st.cur){
+      dom.head.innerHTML='<b>Pilih percakapan</b>'; dom.msgs.innerHTML='<p class="msg-empty">Pilih percakapan di sebelah kiri.</p>'; dom.form.style.display='none';
+    } else {
+      var i=info(st.cur,m);
+      dom.head.innerHTML='<button type="button" class="msg-x msg-back" id="msg-back" aria-label="Kembali">‹</button><span class="msg-av">'+i.av+'</span><div><b>'+esc2(i.title)+'</b><small>'+esc2(i.sub)+'</small></div>';
+      dom.msgs.innerHTML=st.cur.msgs.length?st.cur.msgs.map(function(x){
+        return '<div class="msg-b '+(x.f===m.side?'me':'other')+'"><div>'+esc2(x.t)+'<span>'+ft(x.ts)+'</span></div></div>';
+      }).join(''):'<p class="msg-empty">Mulai percakapan dengan menulis pesan di bawah.</p>';
+      dom.msgs.scrollTop=dom.msgs.scrollHeight;
+      dom.form.style.display='block';
+      if(!st.cur.draft&&unread(st.cur,m)){ st.cur.read[m.side==='umkm'?'umkm':'peer']=Date.now(); save(); }
+    }
+    updateBadge();
+  }
+  function openDrawer(t){
+    ensure(); ensureDom();
+    var m=me(), list=mine(m);
+    if(t) st.cur=t;
+    else if(!st.cur||(!st.cur.draft&&list.indexOf(st.cur)<0)) st.cur=window.innerWidth>700?(list[0]||null):null;
+    st.open=true; dom.o.classList.add('open'); dom.box.classList.toggle('conv-open',!!t); render();
+    if(t) setTimeout(function(){ dom.input.focus(); },250);
+  }
+  function closeDrawer(){ st.open=false; if(dom) dom.o.classList.remove('open'); }
+  window.updateMsgBadge=function(){ ensure(); updateBadge(); };
+  window.setupDetailChatBtn=function(u){
+    var b=document.getElementById('detail-chat'); if(!b) return;
+    ensure(); var m=me();
+    if(m.type==='owner'){ b.style.display='none'; return; }
+    b.textContent=m.type==='admin'?'💬 Chat sebagai Tim LoBiz':'💬 Chat dengan UMKM';
+    b.style.display='inline-flex';
+    b.onclick=function(){
+      var mm=me();
+      if(mm.type==='guest'){ showToast('Masuk atau daftar akun pelanggan untuk chat dengan UMKM.','error'); openAuthModal('login'); return; }
+      st.cur=null; openDrawer(find(u.id,mm));
+    };
+  };
+  document.addEventListener('click',function(e){ if(e.target.closest&&e.target.closest('#msg-open')) openDrawer(); });
+  window.addEventListener('storage',function(e){
+    if(e.key!==KEY||!loaded) return;
+    try{ chats=JSON.parse(e.newValue||'[]'); }catch(x){ return; }
+    if(st.cur&&!st.cur.draft) st.cur=chats.find(function(c){ return c.id===st.cur.id; })||null;
+    if(st.open&&dom) render(); else updateBadge();
+  });
 })();
