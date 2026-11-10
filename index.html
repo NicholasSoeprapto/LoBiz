@@ -1,0 +1,575 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LoBiz — Lokal Bisnis Lo Bisa | Direktori &amp; Etalase UMKM</title>
+<meta name="description" content="LoBiz adalah direktori dan etalase UMKM lokal dengan verifikasi admin, sistem rating, dan dashboard analitik sederhana untuk pemilik usaha.">
+<link rel="icon" type="image/png" href="logo.png">
+<link rel="apple-touch-icon" href="logo.png">
+<meta property="og:image" content="logo.png">
+
+<!-- Google Fonts — loaded from CDN, works on any machine with internet -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+
+<!-- All styles in LoBiz.css (same folder) -->
+<link rel="stylesheet" href="LoBiz.css">
+</head>
+<body>
+
+<!-- ============================================================
+     NAVBAR
+     ============================================================ -->
+<div class="ticker" id="ticker" aria-label="Kabar terbaru"><div class="ticker-label">● LIVE</div><div class="ticker-viewport"><div class="ticker-track" id="ticker-track"></div></div></div>
+<header class="navbar">
+  <div class="container">
+    <a href="#" class="brand" data-nav="home"><img class="brand-mark" src="logo.png" alt="LoBiz"></a>
+    <nav class="nav-links" aria-label="Navigasi utama">
+      <a href="#direktori" data-scroll="direktori">Direktori</a>
+      <a href="#cara-kerja" data-scroll="cara-kerja">Cara Kerja</a>
+      <a href="#" data-action="open-register-umkm">Daftarkan UMKM</a>
+    </nav>
+    <div class="nav-actions" id="nav-actions"></div>
+
+    <!-- Dark / light mode toggle -->
+    <button class="theme-toggle" id="theme-toggle" aria-label="Ganti tema" title="Ganti tema gelap/terang">
+      <span class="theme-toggle-track">
+        <span class="theme-toggle-thumb"></span>
+        <span class="theme-icon theme-icon-sun" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="4"/>
+            <line x1="12" y1="2"  x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="4.22" y1="4.22"  x2="6.34" y2="6.34"/><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"/>
+            <line x1="2"    y1="12"    x2="5"    y2="12"/>  <line x1="19"    y1="12"    x2="22"    y2="12"/>
+            <line x1="4.22" y1="19.78" x2="6.34" y2="17.66"/><line x1="17.66" y1="6.34"  x2="19.78" y2="4.22"/>
+          </svg>
+        </span>
+        <span class="theme-icon theme-icon-moon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </span>
+      </span>
+    </button>
+
+    <button class="nav-toggle" id="nav-toggle" aria-label="Buka menu">☰</button>
+  </div>
+</header>
+
+<main id="app">
+
+  <!-- ==========================================================
+       VIEW: HOME
+       ========================================================== -->
+  <section class="view active" id="view-home">
+
+    <section class="hero">
+      <svg class="hero-pattern" viewBox="0 0 400 400" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <pattern id="batik" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M20 2 L38 20 L20 38 L2 20 Z" fill="none" stroke="#FFAA00" stroke-width="1"/>
+            <circle cx="20" cy="20" r="3" fill="#FFAA00"/>
+          </pattern>
+        </defs>
+        <rect width="400" height="400" fill="url(#batik)"/>
+      </svg>
+
+      <div class="container">
+        <div>
+          <span class="hero-eyebrow"><span class="dot"></span> SDG 9 · Industri, Inovasi &amp; Infrastruktur</span>
+          <h1>Setiap usaha kecil punya cerita. Kami bantu ceritanya <em>ditemukan</em>.</h1>
+          <p class="hero-sub">LoBiz mencatat, memverifikasi, dan menampilkan UMKM di sekitar Anda — lengkap dengan rating pembeli dan dashboard analitik sederhana untuk pemilik usaha.</p>
+          <div class="hero-stats" id="hero-stats"></div>
+
+          <form class="search-bar" id="search-form">
+            <input type="text" id="search-q" placeholder="Cari nama usaha, mis. &quot;kopi&quot;" aria-label="Cari UMKM">
+            <select id="search-kategori" aria-label="Filter kategori">
+              <option value="">Semua kategori</option>
+            </select>
+            <select id="search-kota" aria-label="Filter kota">
+              <option value="">Semua kota</option>
+            </select>
+            <button type="submit" class="btn btn-gold">Cari</button>
+          </form>
+        </div>
+
+        <div class="hero-side">
+          <h3>Punya usaha sendiri?</h3>
+          <p>Daftarkan UMKM Anda, dapatkan halaman etalase, dan pantau performa penjualan lewat dashboard — gratis.</p>
+          <button class="btn btn-primary btn-block" data-action="open-register-umkm">Daftarkan UMKM Anda →</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="direktori">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2>Jelajahi UMKM</h2>
+            <p>UMKM yang tampil di sini sudah melalui proses verifikasi data oleh admin LoBiz.</p>
+          </div>
+          <select id="sort-select" aria-label="Urutkan">
+            <option value="terbaru">Urutkan: Terbaru</option>
+            <option value="hot">🔥 Hot</option>
+            <option value="trending">📈 Trending</option>
+            <option value="terlaris">🏆 Terlaris</option>
+            <option value="pembeli">👥 Pembeli terbanyak</option>
+            <option value="rating">⭐ Rating tertinggi</option>
+            <option value="ulasan">💬 Ulasan terbanyak</option>
+            <option value="nama">Nama A–Z</option>
+          </select>
+        </div>
+        <div class="sort-chips" id="sort-chips"></div>
+        <div class="filter-extra">
+          <label>Rating minimal
+            <select id="filter-minrating"><option value="0">Semua</option><option value="3">3★ ke atas</option><option value="4">4★ ke atas</option><option value="4.5">4.5★ ke atas</option></select>
+          </label>
+          <label class="check"><input type="checkbox" id="filter-official"> Punya ulasan resmi Tim LoBiz</label>
+        </div>
+        <div class="pill-row" id="kategori-pills"></div>
+        <div class="directory-grid" id="directory-grid"></div>
+      </div>
+    </section>
+
+    <section class="section section-dark" id="cara-kerja">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <h2 style="color:#FBF9F1">Cara kerja untuk pemilik UMKM</h2>
+            <p>Tiga langkah dari daftar sampai tampil di direktori.</p>
+          </div>
+        </div>
+        <div class="steps">
+          <div class="step">
+            <div class="step-num">1</div>
+            <h4>Daftarkan usaha Anda</h4>
+            <p>Isi profil toko: nama usaha, kategori, kota, dan deskripsi singkat. Butuh waktu kurang dari 3 menit.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <h4>Diverifikasi admin</h4>
+            <p>Tim LoBiz memeriksa kelengkapan data untuk menjaga kualitas dan kepercayaan direktori.</p>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <h4>Tampil &amp; dipantau</h4>
+            <p>Usaha Anda tampil di direktori publik. Kelola produk dan pantau penjualan lewat dashboard toko.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="cta-band">
+          <div>
+            <img class="cta-logo" src="logo.png" alt="LoBiz">
+            <h3>Jadikan usaha Anda mudah ditemukan pembeli baru.</h3>
+            <p>Pendaftaran gratis, verifikasi cepat, dashboard analitik sudah termasuk.</p>
+          </div>
+          <button class="btn btn-primary" data-action="open-register-umkm">Daftarkan UMKM →</button>
+        </div>
+      </div>
+    </section>
+
+  </section><!-- /view-home -->
+
+  <!-- ==========================================================
+       VIEW: DETAIL UMKM
+       ========================================================== -->
+  <section class="view" id="view-detail">
+    <div class="detail-hero">
+      <div class="container">
+        <a href="#" class="back-link" data-nav="home">← Kembali ke direktori</a>
+        <div class="detail-top">
+          <div class="detail-emoji" id="detail-emoji"></div>
+          <div>
+            <span class="badge badge-verified">✓ Terverifikasi</span>
+            <h1 id="detail-nama" style="color:#fff; font-size:30px; margin-top:8px;"></h1>
+            <p class="detail-tagline" id="detail-tagline"></p>
+            <a id="detail-wa" class="btn btn-gold btn-sm" target="_blank" rel="noopener" style="display:none;margin:10px 0 4px;">💬 Hubungi via WhatsApp</a>
+            <div class="detail-meta">
+              <span id="detail-kategori"></span>
+              <span>·</span>
+              <span id="detail-kota"></span>
+              <span>·</span>
+              <span class="stars" id="detail-stars"></span>
+              <span id="detail-rating-text"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="detail-layout">
+        <div>
+          <div class="panel">
+            <h4>Tentang usaha ini</h4>
+            <p id="detail-desc" style="color:var(--muted); font-size:14.5px;"></p>
+            <div id="detail-about"></div>
+          </div>
+          <div class="panel">
+            <h4>Galeri</h4>
+            <p class="form-hint" id="detail-galeri-note" style="display:none">Pemilik belum mengunggah foto — ini gambar contoh.</p>
+            <div class="galeri-grid" id="detail-galeri"></div>
+          </div>
+          <div class="panel">
+            <h4>Produk</h4>
+            <div id="detail-produk"></div>
+          </div>
+          <div class="panel">
+            <h4>Ulasan pembeli (<span id="detail-review-count">0</span>)</h4>
+            <div id="detail-reviews"></div>
+          </div>
+        </div>
+        <div>
+          <div class="panel">
+            <h4 id="review-form-title">Beri rating &amp; ulasan</h4>
+            <form id="rating-form">
+              <div class="form-group">
+                <label for="rating-nama">Nama Anda</label>
+                <input type="text" id="rating-nama" maxlength="60" required>
+                <div class="form-error">Nama wajib diisi.</div>
+              </div>
+              <div class="form-group">
+                <label>Rating</label>
+                <div class="star-input" id="rating-star-input" data-value="0">
+                  <button type="button" data-star="1" aria-label="1 bintang">★</button>
+                  <button type="button" data-star="2" aria-label="2 bintang">★</button>
+                  <button type="button" data-star="3" aria-label="3 bintang">★</button>
+                  <button type="button" data-star="4" aria-label="4 bintang">★</button>
+                  <button type="button" data-star="5" aria-label="5 bintang">★</button>
+                </div>
+                <div class="form-error" id="rating-star-error">Pilih rating minimal 1 bintang.</div>
+              </div>
+              <div class="form-group">
+                <label for="rating-komentar">Ulasan (opsional)</label>
+                <textarea id="rating-komentar" maxlength="240" placeholder="Bagaimana pengalaman Anda?"></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary btn-block" id="review-submit-btn">Kirim ulasan</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="height:60px"></div>
+  </section><!-- /view-detail -->
+
+  <!-- ==========================================================
+       VIEW: DASHBOARD OWNER
+       ========================================================== -->
+  <section class="view" id="view-owner">
+    <div class="dash-shell">
+      <aside class="dash-sidebar">
+        <div class="dash-owner-name" id="owner-toko-nama">Toko</div>
+        <div class="dash-owner-role">Dashboard Pemilik UMKM</div>
+        <nav class="dash-nav" id="owner-nav">
+          <a href="#" data-dashtab="ringkasan" class="active">📊 Ringkasan</a>
+          <a href="#" data-dashtab="produk">📦 Produk</a>
+          <a href="#" data-dashtab="profil">🏬 Profil Toko</a>
+          <a href="#" data-dashtab="halaman">🎨 Halaman Toko</a>
+          <a href="#" data-nav="home">🌐 Lihat direktori</a>
+          <button data-action="logout">↩ Keluar</button>
+        </nav>
+      </aside>
+      <div class="dash-main">
+
+        <div class="dash-tab active" id="owner-tab-ringkasan">
+          <div class="dash-head">
+            <h2>Ringkasan performa</h2>
+            <span class="badge" id="owner-status-badge"></span>
+          </div>
+          <div class="stat-grid">
+            <div class="stat-card"><span>Total pendapatan</span><b id="stat-pendapatan">Rp0</b></div>
+            <div class="stat-card"><span>Produk terjual</span><b id="stat-terjual">0</b></div>
+            <div class="stat-card"><span>Rating rata-rata</span><b id="stat-rating">–</b></div>
+            <div class="stat-card"><span>Jumlah produk</span><b id="stat-produk">0</b></div>
+          </div>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h4>Penjualan 14 hari terakhir</h4>
+              <p class="form-hint">Total nilai transaksi (Rp) per hari.</p>
+              <canvas id="chart-trend" height="220"></canvas>
+            </div>
+            <div class="chart-card">
+              <h4>Produk terlaris</h4>
+              <p class="form-hint">Berdasarkan jumlah unit terjual.</p>
+              <canvas id="chart-produk" height="220"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-tab" id="owner-tab-produk">
+          <div class="dash-head"><h2>Kelola produk</h2></div>
+          <form class="quick-form" id="add-produk-form">
+            <div class="form-group">
+              <label for="produk-nama">Nama produk</label>
+              <input type="text" id="produk-nama" maxlength="60" required>
+            </div>
+            <div class="form-group">
+              <label for="produk-harga">Harga (Rp)</label>
+              <input type="number" id="produk-harga" min="100" required>
+            </div>
+            <button type="submit" class="btn btn-primary">+ Tambah produk</button>
+          </form>
+          <div class="panel">
+            <table>
+              <thead><tr><th>Produk</th><th>Harga</th><th>Terjual</th><th>Catat penjualan</th><th></th></tr></thead>
+              <tbody id="produk-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dash-tab" id="owner-tab-halaman">
+          <div class="dash-head"><h2>Halaman toko saya</h2><button type="button" class="btn btn-outline btn-sm" id="preview-halaman">👁 Lihat halaman publik</button></div>
+          <div class="panel">
+            <h4>Foto utama</h4>
+            <div class="up-grid">
+              <div class="up-box"><b>Banner / sampul</b><div class="up-preview wide" id="prev-cover"></div><div class="up-actions"><label class="btn btn-outline btn-sm up-btn">📷 Unggah<input type="file" accept="image/*" hidden data-upload="cover"></label><button type="button" class="btn btn-ghost btn-sm" data-rm="cover">Hapus</button></div></div>
+              <div class="up-box"><b>Logo / foto toko</b><div class="up-preview" id="prev-logo"></div><div class="up-actions"><label class="btn btn-outline btn-sm up-btn">📷 Unggah<input type="file" accept="image/*" hidden data-upload="logo"></label><button type="button" class="btn btn-ghost btn-sm" data-rm="logo">Hapus</button></div></div>
+              <div class="up-box"><b>Foto "Tentang kami"</b><div class="up-preview wide" id="prev-aboutFoto"></div><div class="up-actions"><label class="btn btn-outline btn-sm up-btn">📷 Unggah<input type="file" accept="image/*" hidden data-upload="aboutFoto"></label><button type="button" class="btn btn-ghost btn-sm" data-rm="aboutFoto">Hapus</button></div></div>
+            </div>
+            <p class="form-hint">Gambar abu-abu transparan = gambar contoh bawaan. Foto otomatis dikecilkan agar hemat penyimpanan.</p>
+          </div>
+          <div class="panel" style="max-width:640px;">
+            <h4>Cerita &amp; tampilan</h4>
+            <form id="halaman-form">
+              <div class="form-group"><label for="hal-tagline">Slogan singkat</label><input type="text" id="hal-tagline" maxlength="80" placeholder="mis. Kopi lokal, rasa juara"></div>
+              <div class="form-group"><label for="hal-about">Tentang kami / cerita usaha</label><textarea id="hal-about" maxlength="800" rows="5" placeholder="Ceritakan awal usaha, keunggulan, dan nilai yang Anda bawa"></textarea></div>
+              <div class="form-row">
+                <div class="form-group"><label for="hal-wa">WhatsApp (opsional)</label><input type="tel" id="hal-wa" maxlength="16" placeholder="0812xxxxxxx"></div>
+                <div class="form-group"><label for="hal-tema">Warna halaman</label><select id="hal-tema"><option value="merah">Merah maroon</option><option value="oranye">Oranye</option><option value="amber">Amber</option><option value="hijau">Hijau</option></select></div>
+              </div>
+              <button type="submit" class="btn btn-primary">Simpan halaman</button>
+            </form>
+          </div>
+          <div class="panel">
+            <h4>Galeri (toko, produk, suasana, dll)</h4>
+            <div class="quick-form">
+              <div class="form-group"><label for="galeri-tipe">Jenis foto</label><select id="galeri-tipe"><option>Toko</option><option>Produk</option><option>Suasana</option><option>Tim</option><option>Lainnya</option></select></div>
+              <div class="form-group"><label for="galeri-caption">Keterangan (opsional)</label><input type="text" id="galeri-caption" maxlength="60"></div>
+              <label class="btn btn-primary up-btn">+ Unggah foto<input type="file" accept="image/*" multiple hidden data-upload="galeri"></label>
+            </div>
+            <div class="galeri-grid" id="owner-galeri"></div>
+          </div>
+          <div class="panel">
+            <h4>Foto produk</h4>
+            <div id="owner-produk-foto"></div>
+          </div>
+        </div>
+
+        <div class="dash-tab" id="owner-tab-profil">
+          <div class="dash-head"><h2>Profil toko</h2></div>
+          <div class="panel" style="max-width:520px;">
+            <form id="profil-form">
+              <div class="form-group">
+                <label for="profil-nama">Nama usaha</label>
+                <input type="text" id="profil-nama" maxlength="60" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="profil-kategori">Kategori</label>
+                  <select id="profil-kategori" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="profil-kota">Kota</label>
+                  <input type="text" id="profil-kota" maxlength="40" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="profil-deskripsi">Deskripsi</label>
+                <textarea id="profil-deskripsi" maxlength="280" required></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary">Simpan perubahan</button>
+            </form>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section><!-- /view-owner -->
+
+  <!-- ==========================================================
+       VIEW: DASHBOARD ADMIN
+       ========================================================== -->
+  <section class="view" id="view-admin">
+    <div class="dash-shell">
+      <aside class="dash-sidebar">
+        <div class="dash-owner-name">Admin LoBiz</div>
+        <div class="dash-owner-role">Panel Administrator</div>
+        <nav class="dash-nav">
+          <a href="#" data-dashtab-admin="verifikasi" class="active">🛡 Verifikasi</a>
+          <a href="#" data-dashtab-admin="semua">📋 Semua UMKM</a>
+          <a href="#" data-dashtab-admin="ringkasan">📈 Statistik</a>
+          <a href="#" data-nav="home">🌐 Lihat direktori</a>
+          <button data-action="logout">↩ Keluar</button>
+        </nav>
+      </aside>
+      <div class="dash-main">
+
+        <div class="dash-tab active" id="admin-tab-verifikasi">
+          <div class="dash-head"><h2>Menunggu verifikasi</h2></div>
+          <div id="admin-pending-list"></div>
+        </div>
+
+        <div class="dash-tab" id="admin-tab-semua">
+          <div class="dash-head"><h2>Semua UMKM</h2></div>
+          <div class="panel">
+            <table>
+              <thead><tr><th>Nama usaha</th><th>Kategori</th><th>Kota</th><th>Status</th><th></th></tr></thead>
+              <tbody id="admin-all-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="dash-tab" id="admin-tab-ringkasan">
+          <div class="dash-head"><h2>Statistik platform</h2></div>
+          <div class="stat-grid">
+            <div class="stat-card"><span>Total UMKM</span><b id="admin-stat-total">0</b></div>
+            <div class="stat-card"><span>Terverifikasi</span><b id="admin-stat-verified">0</b></div>
+            <div class="stat-card"><span>Menunggu</span><b id="admin-stat-pending">0</b></div>
+            <div class="stat-card"><span>Total ulasan</span><b id="admin-stat-ratings">0</b></div>
+          </div>
+          <div class="chart-grid">
+            <div class="chart-card">
+              <h4>UMKM per kategori</h4>
+              <p class="form-hint">Jumlah UMKM terverifikasi tiap kategori.</p>
+              <canvas id="chart-admin-kategori" height="220"></canvas>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section><!-- /view-admin -->
+
+</main>
+
+<!-- ============================================================
+     FOOTER
+     ============================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-brand">
+      <div class="brand"><img class="brand-mark" src="logo.png" alt="LoBiz"></div>
+      <p>Direktori dan etalase digital untuk UMKM lokal — dibangun untuk lomba inovasi digital, tema SDG 9: Industri, Inovasi, dan Infrastruktur.</p>
+    </div>
+    <div class="footer-cols">
+      <div class="footer-col">
+        <h5>Jelajahi</h5>
+        <a href="#direktori" data-scroll="direktori">Direktori UMKM</a>
+        <a href="#cara-kerja" data-scroll="cara-kerja">Cara kerja</a>
+        <a href="#" data-action="open-register-umkm">Daftarkan UMKM</a>
+      </div>
+      <div class="footer-col">
+        <h5>Akun</h5>
+        <a href="#" data-action="open-login">Masuk</a>
+        <a href="#" data-action="reset-demo">Reset data demo</a>
+      </div>
+    </div>
+  </div>
+  <div class="container footer-bottom">
+    <p class="footer-note">Catatan privasi: ini adalah prototipe front-end untuk keperluan lomba. Semua data — termasuk akun — disimpan secara lokal di browser Anda (localStorage), bukan di server. Kata sandi tidak pernah disimpan dalam bentuk teks asli; disimpan dalam bentuk hash SHA‑256.</p>
+    <p>© 2026 LoBiz.</p>
+  </div>
+</footer>
+
+<!-- ============================================================
+     AUTH MODAL
+     ============================================================ -->
+<div class="overlay hidden" id="auth-overlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+    <button class="modal-close" data-action="close-modal" aria-label="Tutup">✕</button>
+    <div class="modal-logo"><img src="logo.png" alt="LoBiz"></div>
+    <div class="modal-head">
+      <h3 id="auth-title">Masuk</h3>
+    </div>
+    <div class="tab-switch">
+      <button type="button" class="active" data-authtab="login">Masuk</button>
+      <button type="button" data-authtab="register">Daftarkan UMKM</button>
+    </div>
+
+    <!-- LOGIN -->
+    <form id="login-form">
+      <div class="form-group">
+        <label for="login-username">Username</label>
+        <input type="text" id="login-username" required autocomplete="username">
+      </div>
+      <div class="form-group">
+        <label for="login-password">Kata sandi</label>
+        <div class="pw-wrap">
+          <input type="password" id="login-password" required autocomplete="current-password">
+          <button type="button" class="pw-eye" aria-label="Tampilkan kata sandi" data-pw-toggle="login-password">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>
+            </svg>
+          </button>
+        </div>
+        <div class="form-error" id="login-error">Username atau kata sandi salah.</div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Masuk</button>
+      <div class="demo-box">
+        <b>Akun demo</b><br>
+        Admin — user: <b>admin</b> · sandi: <b>admin123</b><br>
+        Pemilik UMKM — user: <b>siti</b> · sandi: <b>siti123</b>
+      </div>
+    </form>
+
+    <!-- REGISTER -->
+    <form id="register-form" class="hidden">
+      <div class="form-group">
+        <label for="reg-nama-usaha">Nama usaha</label>
+        <input type="text" id="reg-nama-usaha" maxlength="60" required>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="reg-kategori">Kategori</label>
+          <select id="reg-kategori" required></select>
+        </div>
+        <div class="form-group">
+          <label for="reg-kota">Kota</label>
+          <input type="text" id="reg-kota" maxlength="40" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="reg-deskripsi">Deskripsi singkat</label>
+        <textarea id="reg-deskripsi" maxlength="200" required placeholder="Ceritakan usaha Anda dalam 1–2 kalimat"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label for="reg-username">Username</label>
+          <input type="text" id="reg-username" maxlength="24" required autocomplete="username">
+          <div class="form-error" id="reg-username-error">Username sudah dipakai.</div>
+        </div>
+        <div class="form-group">
+          <label for="reg-password">Kata sandi</label>
+          <div class="pw-wrap">
+            <input type="password" id="reg-password" minlength="6" required autocomplete="new-password">
+            <button type="button" class="pw-eye" aria-label="Tampilkan kata sandi" data-pw-toggle="reg-password">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="form-hint">Minimal 6 karakter.</div>
+        </div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Daftarkan usaha saya</button>
+      <p class="form-hint" style="margin-top:12px;">Usaha Anda akan tampil di direktori publik setelah diverifikasi admin.</p>
+    </form>
+  </div>
+</div>
+
+<!-- Theme wipe overlay (clip-path circle expand — see LoBiz.css / LoBiz.js) -->
+<div id="theme-wipe" aria-hidden="true"><div class="wipe-circle"></div></div>
+
+<!-- Toast notifications -->
+<div id="toast-wrap" aria-live="polite"></div>
+
+<!-- All logic in LoBiz.js (same folder — no absolute paths, works anywhere) -->
+<script src="LoBiz.js"></script>
+</body>
+</html>
