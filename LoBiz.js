@@ -1239,3 +1239,120 @@ function setupExtras(){
 }
 
 document.addEventListener('DOMContentLoaded', init);
+
+/* =============================================================
+   LOBY — asisten support LoBiz (chatbot berbasis aturan, tanpa server)
+   ============================================================= */
+(function(){
+  var BOT='Loby', KEY='LoBiz_chat_v1';
+  var AVATAR='data:image/svg+xml;charset=utf-8,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8A0A25"/><stop offset=".6" stop-color="#F2142B"/><stop offset="1" stop-color="#FF6A1F"/></linearGradient></defs><circle cx="50" cy="50" r="50" fill="url(#a)"/><path d="M22 40 L30 24 H70 L78 40Z" fill="#fff"/><path d="M30 24 L26 40 M42 24 L40 40 M54 24 L54 40 M66 24 L68 40" stroke="#F2142B" stroke-width="5" opacity=".85"/><path d="M22 40 q7 9 14 0 q7 9 14 0 q7 9 14 0 q7 9 14 0" fill="#FFAA00"/><rect x="28" y="50" width="44" height="30" rx="10" fill="#fff"/><circle cx="41" cy="62" r="4" fill="#3A0613"/><circle cx="59" cy="62" r="4" fill="#3A0613"/><circle cx="42.3" cy="60.7" r="1.3" fill="#fff"/><circle cx="60.3" cy="60.7" r="1.3" fill="#fff"/><path d="M42 70 q8 8 16 0" stroke="#3A0613" stroke-width="3.5" fill="none" stroke-linecap="round"/><circle cx="35" cy="69" r="3.2" fill="#FF8A8A" opacity=".7"/><circle cx="65" cy="69" r="3.2" fill="#FF8A8A" opacity=".7"/></svg>');
+  var CHIPS=['Apa itu LoBiz?','Cara daftar UMKM','Cara upload foto toko','Cara beri ulasan','Filter & urutan'];
+  var KB=[
+    {k:[/\b(halo|hai|hi|hello|hallo|pagi|siang|sore|malam|permisi|p)\b/],a:['Halo! 👋 Saya Loby, asisten LoBiz. Ada yang bisa saya bantu soal website ini?','Hai! Saya Loby 😊 Mau tanya soal pendaftaran UMKM, ulasan, atau fitur lain? Silakan.'],q:CHIPS},
+    {k:[/terima kasih|makasih|thanks|thank you|thx|mantap|oke makasih/],a:['Sama-sama! 😊 Kalau ada yang lain, tanya saja ya.','Senang bisa membantu! Semoga usahanya makin laris 🚀']},
+    {k:[/siapa (kamu|anda)|(kamu|anda) siapa|nama (kamu|mu|anda)|kamu (itu )?apa|manusia|robot|bot\b|\bai\b/],a:['Saya Loby, asisten otomatis LoBiz. Saya bukan manusia: saya bot berbasis aturan yang menjawab pertanyaan umum soal website ini. 🤖','Namaku Loby! Bot asisten LoBiz. Jawabanku otomatis, jadi kalau pertanyaannya rumit, coba pakai kata kunci yang lebih sederhana ya.']},
+    {k:[/apa itu|apa sih|tentang lobiz|lobiz itu|jelaskan lobiz|website ini|situs ini|fungsi/],a:['LoBiz (Lokal Bisnis Lo Bisa) adalah direktori dan etalase digital untuk UMKM lokal. Pemilik usaha bisa memasang halaman toko, produk, dan foto, sedangkan pengunjung bisa menemukan UMKM, melihat rating, dan memberi ulasan. 🏪'],q:['Cara daftar UMKM','Filter & urutan','Apakah gratis?']},
+    {k:[/daftar|registrasi|bergabung|buat akun|pendaftaran|sign ?up|gabung/],a:['Cara mendaftarkan UMKM: 1) klik tombol "Daftarkan UMKM" di beranda, 2) isi data akun dan data usaha, 3) kirim. Setelah itu pendaftaran Anda ditinjau admin dan, kalau disetujui, usaha Anda tampil di direktori. ✅'],q:['Berapa lama verifikasi?','Cara upload foto toko']},
+    {k:[/verifikasi|disetujui|menunggu|pending|status|ditolak|lama.*(setuju|verif)/],a:['Setiap pendaftaran ditinjau admin LoBiz lebih dulu. Selama belum disetujui, status usaha Anda "menunggu" dan belum muncul di direktori publik. Cek statusnya lewat dashboard setelah login. Kalau ditolak, perbaiki data usaha lalu daftar ulang.'],q:['Cara daftar UMKM','Lupa password']},
+    {k:[/login|masuk|log in|sign in|akun demo|demo|username/],a:['Klik tombol "Masuk" di pojok kanan atas, lalu isi username dan password. Untuk mencoba versi demo: admin → admin / admin123, pemilik UMKM → siti / siti123 atau made / made123.'],q:['Lupa password','Apa itu dashboard?']},
+    {k:[/lupa|reset password|ganti password|kata sandi|sandi/],a:['Karena ini versi demo, belum ada fitur reset password lewat email. Kalau lupa, Anda bisa mendaftar dengan akun baru atau memakai akun demo. Fitur reset akan ada saat LoBiz memakai server sungguhan.']},
+    {k:[/upload|unggah|foto|gambar|banner|logo|galeri/],a:['Untuk memasang foto: login sebagai pemilik, buka dashboard lalu tab "🎨 Halaman Toko". Di sana Anda bisa mengunggah banner, logo, foto "Tentang kami", galeri (maksimal 12 foto), dan foto tiap produk. Foto otomatis dikecilkan supaya hemat penyimpanan. 📷','Foto toko diatur di dashboard → tab "🎨 Halaman Toko". Anda bisa mengunggah banner, logo, galeri, dan foto produk. Kalau belum ada foto, LoBiz menampilkan gambar contoh otomatis.'],q:['Cara atur halaman toko','Foto tidak mau terunggah']},
+    {k:[/tidak (bisa|mau) (terunggah|upload|unggah)|gagal (upload|unggah)|penuh|kuota|storage|ukuran/,/upload|unggah|foto|gambar/],a:['Kalau unggahan gagal: pastikan file berupa gambar (JPG/PNG), lalu coba foto yang lebih kecil. Penyimpanan browser terbatas (sekitar 5 MB), jadi kalau sudah penuh, hapus beberapa foto galeri lalu coba lagi.']},
+    {k:[/halaman toko|customi[sz]e|atur (halaman|toko|tampilan)|slogan|tentang kami|cerita usaha|warna halaman|tema/],a:['Di tab "🎨 Halaman Toko" Anda bisa mengisi slogan, cerita usaha, nomor WhatsApp, dan memilih warna halaman (merah, oranye, amber, atau hijau). Klik "Simpan halaman", lalu "Lihat halaman publik" untuk melihat hasilnya.']},
+    {k:[/produk|barang|jualan|tambah.*produk|harga/],a:['Produk dikelola di dashboard pemilik, tab Produk: tambah, ubah, atau hapus produk beserta harganya. Foto produk bisa diatur di tab "🎨 Halaman Toko".'],q:['Cara upload foto toko','Catat penjualan']},
+    {k:[/catat.*(jual|transaksi)|penjualan|transaksi|omzet|pendapatan|grafik|dashboard/],a:['Dashboard pemilik menampilkan ringkasan pendapatan, unit terjual, rating, grafik tren, dan produk terlaris. Catat penjualan lewat tab penjualan agar angkanya ikut terbarui.']},
+    {k:[/ulasan|review|rating|bintang|komentar|nilai/],a:['Untuk memberi ulasan: buka halaman detail UMKM, pilih bintang 1–5, isi nama dan komentar, lalu klik "Kirim ulasan". ⭐ Ulasan dengan lencana "✔ Ulasan Resmi" berasal dari Tim LoBiz dan selalu tampil paling atas.'],q:['Apa itu ulasan resmi?','Filter & urutan']},
+    {k:[/resmi|tim lobiz|admin.*(ulas|review)/],a:['Ulasan resmi adalah penilaian dari Tim LoBiz (akun admin) untuk sebuah UMKM. Ulasan ini diberi lencana khusus dan diletakkan paling atas. Anda juga bisa memfilter UMKM yang punya ulasan resmi di direktori.']},
+    {k:[/filter|urut|sort|cari|pencarian|search|kategori|kota|terlaris|trending|hot|terbaru|paling/],a:['Di direktori Anda bisa mencari nama, memfilter kategori dan kota, atau memilih urutan lewat tombol: 🔥 Hot, 📈 Trending, 🏆 Terlaris, 👥 Pembeli terbanyak, 🆕 Terbaru, ⭐ Rating tertinggi, dan 💬 Ulasan terbanyak. Ada juga filter rating minimal.'],q:['Apa arti Hot dan Trending?']},
+    {k:[/arti (hot|trending)|hot (dan|vs|&) trending|beda.*(hot|trending)|label/],a:['Hot = UMKM dengan aktivitas pembeli tinggi belakangan ini (dipengaruhi rating). Trending = UMKM yang pembelinya naik dibanding beberapa hari sebelumnya. Terlaris dihitung dari total unit terjual. Semua angka di versi demo ini berasal dari data contoh.']},
+    {k:[/teks berjalan|running text|pita|ticker|live|pembeli terbaru/],a:['Teks berjalan di atas halaman menampilkan kabar UMKM terbaru, pembeli yang baru membeli, dan ulasan baru. Di versi demo ini isinya data buatan. Arahkan kursor ke teks untuk menghentikannya sebentar.']},
+    {k:[/beli|pesan|order|bayar|checkout|keranjang|pembayaran/,/mau beli|cara beli|ingin beli|pesan produk/],a:['LoBiz berfungsi sebagai direktori dan etalase. Untuk membeli, hubungi UMKM-nya langsung, misalnya lewat tombol "💬 Hubungi via WhatsApp" di halaman detail kalau pemilik sudah mengisinya. Sistem pembayaran dalam situs belum tersedia.']},
+    {k:[/whatsapp|wa\b|hubungi (umkm|penjual|toko)|kontak (umkm|penjual|toko)/],a:['Tombol WhatsApp muncul di halaman UMKM yang pemiliknya sudah mengisi nomor di tab "🎨 Halaman Toko". Kalau tombolnya tidak ada, berarti pemilik belum mengisi nomor.']},
+    {k:[/gratis|biaya|bayar.*daftar|harga langganan|tarif|berbayar/],a:['Mendaftarkan UMKM dan memasang halaman toko di LoBiz gratis. 🎉']},
+    {k:[/gelap|dark|terang|tema (gelap|terang)|mode/],a:['Ganti tampilan terang/gelap lewat tombol tema di bagian atas halaman (ikon bulan/matahari). Pilihan Anda tersimpan di browser.']},
+    {k:[/data|privasi|aman|keamanan|hilang|hapus data|localstorage/],a:['Di versi demo ini semua data disimpan di browser Anda sendiri (localStorage), tidak dikirim ke server. Artinya data tidak terbagi antar perangkat, dan menghapus data situs akan menghapus semuanya. Jangan memasukkan data sensitif ya.']},
+    {k:[/error|bug|rusak|masalah|tidak bisa|gak bisa|ga bisa|nggak bisa|macet|lemot|blank|kosong/],a:['Maaf atas kendalanya 🙏 Coba muat ulang halaman (Ctrl+R / tarik layar ke bawah) dan pastikan memakai browser terbaru. Kalau masih bermasalah, ceritakan langkah yang Anda lakukan dan apa yang muncul, misalnya "tombol kirim ulasan tidak merespons", supaya saya bisa arahkan lebih tepat.']},
+    {k:[/manusia|petugas|cs\b|customer service|admin.*hubung|hubungi (tim|kami|admin)|kontak kami|telepon|email/],a:['Saya bot otomatis, jadi belum bisa menyambungkan Anda ke petugas manusia di versi demo ini. Untuk saran atau laporan, tulis pertanyaan Anda di sini dengan jelas ya. Di versi resmi, kanal kontak tim LoBiz akan dicantumkan di footer.']},
+    {k:[/sdg|tujuan|misi|visi|dampak|umkm lokal/],a:['LoBiz mendukung SDG 9: Industri, Inovasi, dan Infrastruktur, dengan membantu UMKM lokal tampil online dan mudah ditemukan. Slogan kami: "Lokal Bisnis Lo Bisa" 💪']},
+    {k:[/lelucon|jokes?|bercanda|lucu|garing/],a:['Kenapa UMKM selalu optimis? Karena modalnya kecil, tapi harapannya selalu "full stock"! 😄','Pembeli: "Bisa kurang, Kak?" Penjual: "Bisa… kurang ajar maksudnya?" 😅 Ayo kembali ke LoBiz, ada yang mau ditanyakan?']},
+    {k:[/apa kabar|how are you|lagi apa/],a:['Baik! Siap membantu 😄 Ada yang mau ditanyakan soal LoBiz?']},
+    {k:[/bye|dadah|sampai jumpa|sudah cukup|udah cukup/],a:['Sampai jumpa! Kalau butuh bantuan lagi, saya di sini 👋']}
+  ];
+  var FALLBACK=['Hmm, saya belum menemukan jawaban yang pas untuk itu 🤔 Coba pakai kata kunci yang lebih sederhana, misalnya "daftar", "foto", "ulasan", atau "filter".','Maaf, saya belum paham maksudnya. Saya bisa membantu soal pendaftaran, foto toko, produk, ulasan, dan pencarian. Pilih salah satu di bawah ya!'];
+  var el={}, hist=[], open=false, busy=false;
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+  function pick(a){ return a[Math.floor(Math.random()*a.length)]; }
+  function save(){ try{ localStorage.setItem(KEY,JSON.stringify(hist.slice(-40))); }catch(e){} }
+  function time(){ var d=new Date(); return ('0'+d.getHours()).slice(-2)+':'+('0'+d.getMinutes()).slice(-2); }
+  function addMsg(who,text,t,skipSave){
+    var row=document.createElement('div'); row.className='lb-msg lb-'+who;
+    row.innerHTML=(who==='bot'?'<img class="lb-av" src="'+AVATAR+'" alt="">':'')+'<div class="lb-bubble">'+esc(text)+'<span class="lb-time">'+(t||time())+'</span></div>';
+    el.msgs.appendChild(row); el.msgs.scrollTop=el.msgs.scrollHeight;
+    if(!skipSave){ hist.push({w:who,t:text,h:t||time()}); save(); }
+  }
+  function setChips(list){
+    el.chips.innerHTML=(list||[]).map(function(c){ return '<button type="button" class="lb-chip">'+esc(c)+'</button>'; }).join('');
+  }
+  function answer(text){
+    var s=text.toLowerCase().replace(/[^a-z0-9&\s]/g,' '), best=null, bestScore=0;
+    KB.forEach(function(e){
+      var sc=0; e.k.forEach(function(r){ if(r.test(s)) sc++; });
+      if(s.trim().length<=2 && e.a[0].indexOf('Halo')!==0) sc=0;
+      if(sc>bestScore){ bestScore=sc; best=e; }
+    });
+    return best?{a:pick(best.a),q:best.q||CHIPS}:{a:pick(FALLBACK),q:CHIPS};
+  }
+  function send(text){
+    text=(text||'').trim().slice(0,300); if(!text||busy) return;
+    addMsg('user',text); setChips([]); busy=true;
+    var r=answer(text);
+    var typing=document.createElement('div'); typing.className='lb-msg lb-bot';
+    typing.innerHTML='<img class="lb-av" src="'+AVATAR+'" alt=""><div class="lb-bubble lb-typing"><i></i><i></i><i></i></div>';
+    setTimeout(function(){ el.msgs.appendChild(typing); el.msgs.scrollTop=el.msgs.scrollHeight; },250);
+    setTimeout(function(){
+      if(typing.parentNode) typing.parentNode.removeChild(typing);
+      addMsg('bot',r.a); setChips(r.q); busy=false;
+      if(!open){ el.badge.style.display='flex'; }
+    },900+Math.min(1400,r.a.length*9));
+  }
+  function toggle(force){
+    open=typeof force==='boolean'?force:!open;
+    el.panel.classList.toggle('open',open); el.fab.classList.toggle('hide',open);
+    el.greet.classList.remove('show');
+    if(open){ el.badge.style.display='none'; setTimeout(function(){ el.input.focus(); },250); el.msgs.scrollTop=el.msgs.scrollHeight; }
+  }
+  function reset(){ hist=[]; save(); el.msgs.innerHTML=''; intro(); }
+  function intro(){
+    addMsg('bot','Halo! Saya Loby 👋, asisten LoBiz. Saya bisa membantu soal pendaftaran UMKM, foto toko, ulasan, dan cara memakai website ini. Mau tanya apa?',null,true);
+    hist.push({w:'bot',t:'Halo! Saya Loby 👋, asisten LoBiz. Saya bisa membantu soal pendaftaran UMKM, foto toko, ulasan, dan cara memakai website ini. Mau tanya apa?',h:time()}); save();
+    setChips(CHIPS);
+  }
+  function init(){
+    var root=document.createElement('div'); root.id='lb-chat';
+    root.innerHTML=
+      '<div class="lb-greet" id="lb-greet"><b>Butuh bantuan?</b><br>Tanya Loby soal LoBiz 👋</div>'+
+      '<button type="button" class="lb-fab" id="lb-fab" aria-label="Buka chat bantuan"><img src="'+AVATAR+'" alt="Loby"><span class="lb-badge" id="lb-badge">1</span></button>'+
+      '<section class="lb-panel" id="lb-panel" role="dialog" aria-label="Chat bantuan LoBiz">'+
+        '<header class="lb-head"><img src="'+AVATAR+'" alt=""><div><b>'+BOT+'</b><small><i class="lb-dot"></i> Asisten LoBiz · online</small></div>'+
+        '<button type="button" class="lb-ico" id="lb-reset" title="Mulai ulang" aria-label="Mulai ulang">↻</button><button type="button" class="lb-ico" id="lb-close" aria-label="Tutup chat">✕</button></header>'+
+        '<div class="lb-msgs" id="lb-msgs" aria-live="polite"></div>'+
+        '<div class="lb-chips" id="lb-chips"></div>'+
+        '<div class="lb-note">Loby adalah bot otomatis, bukan manusia.</div>'+
+        '<div class="lb-form"><input type="text" id="lb-input" maxlength="300" placeholder="Tulis pertanyaan Anda..." autocomplete="off"><button type="button" id="lb-send" aria-label="Kirim">➤</button></div>'+
+      '</section>';
+    document.body.appendChild(root);
+    el={fab:document.getElementById('lb-fab'),panel:document.getElementById('lb-panel'),msgs:document.getElementById('lb-msgs'),chips:document.getElementById('lb-chips'),input:document.getElementById('lb-input'),badge:document.getElementById('lb-badge'),greet:document.getElementById('lb-greet')};
+    try{ hist=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ hist=[]; }
+    if(hist.length){ hist.forEach(function(m){ addMsg(m.w,m.t,m.h,true); }); setChips(CHIPS); } else intro();
+    el.fab.addEventListener('click',function(){ toggle(true); });
+    document.getElementById('lb-close').addEventListener('click',function(){ toggle(false); });
+    document.getElementById('lb-reset').addEventListener('click',reset);
+    document.getElementById('lb-send').addEventListener('click',function(){ var v=el.input.value; el.input.value=''; send(v); });
+    el.input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ var v=el.input.value; el.input.value=''; send(v); } });
+    el.chips.addEventListener('click',function(e){ var b=e.target.closest('.lb-chip'); if(b) send(b.textContent); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&open) toggle(false); });
+    setTimeout(function(){ if(!open&&!hist.some(function(m){ return m.w==='user'; })) el.greet.classList.add('show'); },4000);
+    setTimeout(function(){ el.greet.classList.remove('show'); },12000);
+  }
+  document.addEventListener('DOMContentLoaded',init);
+})();

@@ -15,6 +15,7 @@ Proyek ini mendukung **SDG 9: Industri, Inovasi, dan Infrastruktur**.
 - Label otomatis pada kartu: 🔥 Hot, 📈 Trending, 🏆 Terlaris, 🆕 Baru.
 - Halaman detail UMKM: banner, logo, slogan, cerita usaha, galeri foto (bisa diperbesar), daftar produk, dan tombol WhatsApp.
 - Rating bintang dan ulasan untuk setiap UMKM.
+- **Chat bantuan Loby**: tombol chat di pojok kanan bawah dengan asisten otomatis bernama Loby (bot berbasis aturan, tanpa server). Menjawab pertanyaan umum seputar pendaftaran, foto toko, ulasan, filter, dan akun demo, lengkap dengan tombol saran jawaban, animasi mengetik, dan riwayat chat tersimpan di browser.
 - Teks berjalan (kanan ke kiri) berisi UMKM terbaru, pembeli terbaru, dan ulasan baru. Datanya buatan (demo).
 
 **Untuk pemilik UMKM**
@@ -77,6 +78,7 @@ Data awal (UMKM, produk, transaksi, dan ulasan) dibuat otomatis saat halaman per
 
 ## Pengembangan lanjutan
 
+- Menghubungkan Loby ke model AI atau layanan live chat sungguhan (saat ini jawabannya berbasis aturan).
 - Backend dan database sungguhan (autentikasi, penyimpanan gambar di cloud).
 - Foto stock asli atau unggahan ke penyimpanan objek.
 - Pembeli bisa membeli atau memesan langsung dari halaman UMKM.
