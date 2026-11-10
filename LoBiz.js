@@ -1292,6 +1292,7 @@ document.addEventListener('DOMContentLoaded', init);
   }
   function setChips(list){
     el.chips.innerHTML=(list||[]).map(function(c){ return '<button type="button" class="lb-chip">'+esc(c)+'</button>'; }).join('');
+    el.chipsWrap.style.display=(list&&list.length)?'flex':'none'; el.chips.scrollLeft=0; updateArrows();
   }
   function answer(text){
     var s=text.toLowerCase().replace(/[^a-z0-9&\s]/g,' '), best=null, bestScore=0;
@@ -1319,13 +1320,62 @@ document.addEventListener('DOMContentLoaded', init);
     open=typeof force==='boolean'?force:!open;
     el.panel.classList.toggle('open',open); el.fab.classList.toggle('hide',open);
     el.greet.classList.remove('show');
-    if(open){ el.badge.style.display='none'; setTimeout(function(){ el.input.focus(); },250); el.msgs.scrollTop=el.msgs.scrollHeight; }
+    if(open){ el.badge.style.display='none'; setTimeout(function(){ el.input.focus(); },250); setTimeout(function(){ clampPos(); updateArrows(); },380); el.msgs.scrollTop=el.msgs.scrollHeight; }
   }
   function reset(){ hist=[]; save(); el.msgs.innerHTML=''; intro(); }
   function intro(){
     addMsg('bot','Halo! Saya Loby 👋, asisten LoBiz. Saya bisa membantu soal pendaftaran UMKM, foto toko, ulasan, dan cara memakai website ini. Mau tanya apa?',null,true);
     hist.push({w:'bot',t:'Halo! Saya Loby 👋, asisten LoBiz. Saya bisa membantu soal pendaftaran UMKM, foto toko, ulasan, dan cara memakai website ini. Mau tanya apa?',h:time()}); save();
     setChips(CHIPS);
+  }
+  var POS='LoBiz_chat_pos', pos={x:0,y:0}, cur={x:0,y:0};
+  function applyPos(){ cur={x:pos.x,y:pos.y}; el.panel.style.translate=pos.x+'px '+pos.y+'px'; }
+  function clampPos(){
+    var r=el.panel.getBoundingClientRect(); if(!r.width) return;
+    var m=8, bl=r.left-cur.x, br=r.right-cur.x, bt=r.top-cur.y, bb=r.bottom-cur.y;
+    pos.x=Math.min(Math.max(pos.x,m-bl),window.innerWidth-m-br);
+    pos.y=Math.min(Math.max(pos.y,m-bt),window.innerHeight-m-bb);
+    applyPos();
+  }
+  function savePos(){ try{ localStorage.setItem(POS,JSON.stringify(pos)); }catch(e){} }
+  function updateArrows(){
+    var c=el.chips, max=c.scrollWidth-c.clientWidth;
+    el.arL.classList.toggle('show',c.scrollLeft>4); el.arR.classList.toggle('show',c.scrollLeft<max-4);
+  }
+  function wireMove(){
+    try{ var p=JSON.parse(localStorage.getItem(POS)||'null'); if(p&&isFinite(p.x)&&isFinite(p.y)) pos=p; }catch(e){}
+    applyPos();
+    var drag=null, head=el.head;
+    head.title='Geser untuk memindahkan · klik dua kali untuk mengembalikan';
+    head.addEventListener('pointerdown',function(e){
+      if(window.innerWidth<=480||e.button>0||e.target.closest('button')) return;
+      drag={x:e.clientX,y:e.clientY,px:pos.x,py:pos.y};
+      head.setPointerCapture(e.pointerId); el.panel.classList.add('dragging');
+    });
+    head.addEventListener('pointermove',function(e){
+      if(!drag) return;
+      pos.x=drag.px+e.clientX-drag.x; pos.y=drag.py+e.clientY-drag.y; clampPos();
+    });
+    function end(){ if(!drag) return; drag=null; el.panel.classList.remove('dragging'); savePos(); }
+    head.addEventListener('pointerup',end); head.addEventListener('pointercancel',end);
+    head.addEventListener('dblclick',function(e){ if(e.target.closest('button')) return; pos={x:0,y:0}; applyPos(); savePos(); });
+    window.addEventListener('resize',function(){ if(open) clampPos(); updateArrows(); });
+  }
+  function wireChipScroll(){
+    var c=el.chips, cd=null, moved=false;
+    c.addEventListener('scroll',updateArrows);
+    el.arL.addEventListener('click',function(){ c.scrollBy({left:-170,behavior:'smooth'}); });
+    el.arR.addEventListener('click',function(){ c.scrollBy({left:170,behavior:'smooth'}); });
+    c.addEventListener('wheel',function(e){ if(Math.abs(e.deltaY)>Math.abs(e.deltaX)&&c.scrollWidth>c.clientWidth){ e.preventDefault(); c.scrollLeft+=e.deltaY; } },{passive:false});
+    c.addEventListener('pointerdown',function(e){ if(e.pointerType==='touch') return; cd={x:e.clientX,s:c.scrollLeft}; moved=false; });
+    c.addEventListener('pointermove',function(e){
+      if(!cd) return; var dx=e.clientX-cd.x;
+      if(Math.abs(dx)>4){ moved=true; c.classList.add('grabbing'); }
+      if(moved) c.scrollLeft=cd.s-dx;
+    });
+    function stop(){ cd=null; c.classList.remove('grabbing'); setTimeout(function(){ moved=false; },0); }
+    document.addEventListener('pointerup',stop); c.addEventListener('pointerleave',function(){ if(cd) stop(); });
+    c.addEventListener('click',function(e){ if(moved){ e.stopPropagation(); e.preventDefault(); } },true);
   }
   function init(){
     var root=document.createElement('div'); root.id='lb-chat';
@@ -1336,12 +1386,12 @@ document.addEventListener('DOMContentLoaded', init);
         '<header class="lb-head"><img src="'+AVATAR+'" alt=""><div><b>'+BOT+'</b><small><i class="lb-dot"></i> Asisten LoBiz · online</small></div>'+
         '<button type="button" class="lb-ico" id="lb-reset" title="Mulai ulang" aria-label="Mulai ulang">↻</button><button type="button" class="lb-ico" id="lb-close" aria-label="Tutup chat">✕</button></header>'+
         '<div class="lb-msgs" id="lb-msgs" aria-live="polite"></div>'+
-        '<div class="lb-chips" id="lb-chips"></div>'+
+        '<div class="lb-chips-wrap" id="lb-chips-wrap"><button type="button" class="lb-arrow lb-arrow-l" id="lb-arl" aria-label="Geser ke kiri">‹</button><div class="lb-chips" id="lb-chips"></div><button type="button" class="lb-arrow lb-arrow-r" id="lb-arr" aria-label="Geser ke kanan">›</button></div>'+
         '<div class="lb-note">Loby adalah bot otomatis, bukan manusia.</div>'+
         '<div class="lb-form"><input type="text" id="lb-input" maxlength="300" placeholder="Tulis pertanyaan Anda..." autocomplete="off"><button type="button" id="lb-send" aria-label="Kirim">➤</button></div>'+
       '</section>';
     document.body.appendChild(root);
-    el={fab:document.getElementById('lb-fab'),panel:document.getElementById('lb-panel'),msgs:document.getElementById('lb-msgs'),chips:document.getElementById('lb-chips'),input:document.getElementById('lb-input'),badge:document.getElementById('lb-badge'),greet:document.getElementById('lb-greet')};
+    el={fab:document.getElementById('lb-fab'),panel:document.getElementById('lb-panel'),msgs:document.getElementById('lb-msgs'),chips:document.getElementById('lb-chips'),chipsWrap:document.getElementById('lb-chips-wrap'),arL:document.getElementById('lb-arl'),arR:document.getElementById('lb-arr'),head:document.querySelector('#lb-panel .lb-head'),input:document.getElementById('lb-input'),badge:document.getElementById('lb-badge'),greet:document.getElementById('lb-greet')};
     try{ hist=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ hist=[]; }
     if(hist.length){ hist.forEach(function(m){ addMsg(m.w,m.t,m.h,true); }); setChips(CHIPS); } else intro();
     el.fab.addEventListener('click',function(){ toggle(true); });
@@ -1351,6 +1401,7 @@ document.addEventListener('DOMContentLoaded', init);
     el.input.addEventListener('keydown',function(e){ if(e.key==='Enter'){ var v=el.input.value; el.input.value=''; send(v); } });
     el.chips.addEventListener('click',function(e){ var b=e.target.closest('.lb-chip'); if(b) send(b.textContent); });
     document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&open) toggle(false); });
+    wireMove(); wireChipScroll(); updateArrows();
     setTimeout(function(){ if(!open&&!hist.some(function(m){ return m.w==='user'; })) el.greet.classList.add('show'); },4000);
     setTimeout(function(){ el.greet.classList.remove('show'); },12000);
   }
